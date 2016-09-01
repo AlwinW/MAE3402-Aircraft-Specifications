@@ -95,6 +95,26 @@ AeroParams <- function(inp) {
   return(list(out = out, AeroParamsTable = AeroParamsTable))
 }
 
+##Three cases on takeoff ======================================================================
+# Accelerate to V1 then brake to stop
+AccelerateStop <- function(V1) {
+  RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
+    RecurTrapzd(function(x) x^2 / (coef$A[3] + coef$B[3] * x + coef$C[3] * x^3), V1, 10^-8, 10^-4)
+}
+# Accelerate to V1 then continue after engine failure to V2 + 3 seconds reaction + air distance 
+AccelerateContinue <- function(V1) {
+  RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
+    RecurTrapzd(function(x) x^2 / (coef$A[2] + coef$B[2] * x + coef$C[2] * x^3), V1, coef$Vlof[2], 10^-4) +
+    3 * coef$Vlof[2] +
+    AirDistance$Sair[2]
+}
+# Accelerate to V2 + 3 seconds reaction + air distance
+AccelerateLiftOff <- function() {
+  (RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, coef$Vlof[1], 10^-4) +
+     3 * coef$Vlof[1]+
+     AirDistance$Sair[1]) * 1.15
+}
+
 ## Takeoff ======================================================================
 TakeOff <- function(inp) {
   #--- Initialise a data frame to apply functions to
@@ -111,10 +131,11 @@ TakeOff <- function(inp) {
     StandardAtomsphere(.) %>%
     mutate(
       Cl = ClG,
-      Cd  = Cd0 + K * Cl ^ 2,
+      Keff = Keff(K, hground, b),
+      Cd  = Cd0G + Keff * ClG ^ 2,
       Vstall = Vmin(rho, WS, Clclean + Clflaps),
       Vlof = 1.1 * Vstall,
-      A = g * (PA(P0, sigma) * Ne / W),
+      A = g * (PA(P0eng, sigma) * Ne / W),
       B = g * (- mu),
       C = g * (rho/2 * 1/WS * (mu * Cl - Cd))
     )
@@ -142,24 +163,6 @@ TakeOff <- function(inp) {
     )%>%
     ungroup()
   AirDistance <- data.frame(select(AirDistance, type, R, gamma, hTR, ST, SC, Sair))
-  #--- Functions for each of the three cases on takeoff
-  # Accelerate to V1 then brake to stop
-  AccelerateStop <- function(V1) {
-    RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
-      RecurTrapzd(function(x) x^2 / (coef$A[3] + coef$B[3] * x + coef$C[3] * x^3), V1, 10^-8, 10^-4)
-  }
-  # Accelerate to V1 then continue after engine failure to V2 + 3 seconds reaction + air distance 
-  AccelerateContinue <- function(V1) {
-    RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
-      RecurTrapzd(function(x) x^2 / (coef$A[2] + coef$B[2] * x + coef$C[2] * x^3), V1, coef$Vlof[2], 10^-4) +
-      3 * coef$Vlof[2] +
-      AirDistance$Sair[2]
-  }
-  # Accelerate to V2 + 3 seconds reaction + air distance
-  AccelerateLiftOff <- function() {
-    (RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, coef$Vlof[1], 10^-4) +
-      3 * coef$Vlof[1]+
-      AirDistance$Sair[1]) * 1.15
-  }
+  #--- Determine the BFL
 }
   
