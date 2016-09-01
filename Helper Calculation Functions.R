@@ -57,8 +57,28 @@ InpSpecs <- function(inputvals, specifications) {
   inp <- cbind(inputvals, inp)
 }
 
+## Three cases on takeoff ======================================================================
+# Accelerate to V1 then brake to stop
+AccelerateStop <- function(V1) {
+  RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
+    RecurTrapzd(function(x) x^2 / (coef$A[3] + coef$B[3] * x + coef$C[3] * x^3), V1, 10^-8, 10^-4)
+}
+# Accelerate to V1 then continue after engine failure to V2 + 3 seconds reaction + air distance 
+AccelerateContinue <- function(V1) {
+  RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
+    RecurTrapzd(function(x) x^2 / (coef$A[2] + coef$B[2] * x + coef$C[2] * x^3), V1, coef$Vlof[2], 10^-4) +
+    3 * coef$Vlof[2] +
+    AirDistance$Sair[2]
+}
+# Accelerate to V2 + 3 seconds reaction + air distance
+AccelerateLiftOff <- function() {
+  (RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, coef$Vlof[1], 10^-4) +
+     3 * coef$Vlof[1]+
+     AirDistance$Sair[1]) * 1.15
+}
+
 ## AeroParams ======================================================================
-AeroParams <- function(inp) {
+AeroParams <- function(inp, iteration = FALSE) {
   out <-  inp[rep(row.names(inp), each = 5), 1:length(inp)]
   out$type <- c("Sea Level", "Cruise", "Ceiling", "Takeoff", "Landing")
   out$h <- c(0, inp$AltCruise, inp$AltCeil, 0, 0)
@@ -83,40 +103,18 @@ AeroParams <- function(inp) {
            ClCd32 = sqrt(3/4) * ClCdstar,
            V32 = (1/3)^(1/4) * Vstar
     )
-  
   #--- Create a meaningful output to be returned  to a user
   AeroParamsTable <- select(
     out,
     type, h, rho, Vinf, Vstall, Vsafe, Vstar, V32, 
     Cl, Clstar, Cl32, Clmax, Cd, Cdstar, Cd32, 
     ClCd, ClCdstar, ClCd32)
-  
   #--- Return the result as a list
   return(list(out = out, AeroParamsTable = AeroParamsTable))
 }
 
-##Three cases on takeoff ======================================================================
-# Accelerate to V1 then brake to stop
-AccelerateStop <- function(V1) {
-  RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
-    RecurTrapzd(function(x) x^2 / (coef$A[3] + coef$B[3] * x + coef$C[3] * x^3), V1, 10^-8, 10^-4)
-}
-# Accelerate to V1 then continue after engine failure to V2 + 3 seconds reaction + air distance 
-AccelerateContinue <- function(V1) {
-  RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
-    RecurTrapzd(function(x) x^2 / (coef$A[2] + coef$B[2] * x + coef$C[2] * x^3), V1, coef$Vlof[2], 10^-4) +
-    3 * coef$Vlof[2] +
-    AirDistance$Sair[2]
-}
-# Accelerate to V2 + 3 seconds reaction + air distance
-AccelerateLiftOff <- function() {
-  (RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, coef$Vlof[1], 10^-4) +
-     3 * coef$Vlof[1]+
-     AirDistance$Sair[1]) * 1.15
-}
-
 ## Takeoff ======================================================================
-TakeOff <- function(inp) {
+TakeOff <- function(inp, iteration = FALSE) {
   #--- Initialise a data frame to apply functions to
   coef <- inp[rep(row.names(inp), each = 3), 1:length(inp)]
   coef$type <- c("All Engines", "One Engine Down", "Rejected Take-Off")
@@ -164,5 +162,36 @@ TakeOff <- function(inp) {
     ungroup()
   AirDistance <- data.frame(select(AirDistance, type, R, gamma, hTR, ST, SC, Sair))
   #--- Determine the BFL
+  V1 = ModifiedSecant(function(x) AccelerateStop(x) - AccelerateContinue(x), coef$Vlof[1], 0.01, 1e-4, positive = TRUE)
+  BFL = AccelerateStop(V1)
+  #--- Plotting Data
+  out <- data.frame(type = c("All Engines", "One Engine Down", "Rejected Take-Off"))
+  ## FINISH OFF LATER +++++++================
+}
+
+## Climb ======================================================================
+#--- Determine the various climb rates required
+ClimbRates <- function(inp) {
+  # Create a data frame of the three scenarios
+  out <-  inp[rep(row.names(inp), each = 3), 1:length(inp)]
+  out$type <- c("2nd Seg OEI Climb", "Cruise", "Ceiling")
+  out$Ne <- c(1, 2, 2)
+  out$h <- c(inp$Hobs, inp$AltCruise, inp$AltCeil)
+  out$Clmax <- inp$Clclean + c(inp$Clflaps, 0, 0)
+  # Determine the climb rates for each scenario
+  out <- StandardAtomsphere(out) %>%
+    mutate(Vinf = Mach * a,
+           Vstall = Vmin(rho, WS, Clmax),
+           Vsafe = 1.2 * Vstall)
+  out$Vinf <- c(out$Vsafe[1], out$Vinf[1], out$Vinf[1])
+  out <- mutate(
+      out,
+      qinf = 1/2 * rho * Vinf^2,
+      Cl = W / (qinf * S),
+      Cd = Cd0 + K * Cl^2,
+      PA = PA(P0eng, sigma) * Ne) %>%
+    rowwise() %>%
+    do(data.frame(., ClimbRatesFunction(.$PA, .$Cd0, .$rho, .$Vinf, .$S, .$K, .$W)))
+  return(out)
 }
   

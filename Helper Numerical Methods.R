@@ -33,6 +33,18 @@ RecurTrapzd <- function(func, a, b, toler) {
   return(s_new)
 }
 
-ModifiedSecant <- function(func, )
+ModifiedSecant <- function(func, xr, del, toler, positive = FALSE) {
+  xr_old = xr - 1
+  while (abs(xr - xr_old) > toler) {
+    fx1 = func(xr)
+    fx2 = func(xr + del)
+    xr_old = xr
+    xr = xr_old - (del * fx1) / (fx2 - fx1)
+    if (xr < 0 & positive == TRUE)
+      return(NULL)
+  }
+  return(xr)
+}
 
+fx <- function(x) x^2 - x - 7
 
