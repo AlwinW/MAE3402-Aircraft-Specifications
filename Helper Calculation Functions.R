@@ -194,4 +194,9 @@ ClimbRates <- function(inp) {
     do(data.frame(., ClimbRatesFunction(.$PA, .$Cd0, .$rho, .$Vinf, .$S, .$K, .$W)))
   return(out)
 }
-  
+
+
+
+
+
+ 
