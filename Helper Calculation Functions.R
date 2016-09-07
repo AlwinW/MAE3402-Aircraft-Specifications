@@ -330,6 +330,39 @@ PowerUsage <- function(inp, iteration = FALSE, resolution = 10) {
       )
   asdf <- data.frame(asdf)
   
+  
+  
+  ##################################
+  # Create a data frame of the three scenarios
+  out <-  inp[rep(row.names(inp), each = 3), 1:length(inp)]
+  out$type <- c("2nd Seg OEI Climb", "Cruise", "Ceiling")
+  out$Ne <- c(1, 2, 2)
+  out$h <- c(inp$Hobs, inp$AltCruise, inp$AltCeil)
+  out$Clmax <- inp$Clclean + c(inp$Clflaps, 0, 0)
+  # Determine the climb rates for each scenario
+  out <- StandardAtomsphere(out) %>%
+    mutate(Vinf = Mach * a,
+           Vstall = Vmin(rho, WS, Clmax),
+           Vsafe = 1.2 * Vstall)
+  out$Vinf <- c(out$Vsafe[1], out$Vinf[1], out$Vinf[1])
+  out <- mutate(
+    out,
+    qinf = 1/2 * rho * Vinf^2,
+    Cl = W / (qinf * S),
+    Cd = Cd0 + K * Cl^2,
+    PA = PA(P0eng, sigma) * Ne) %>%
+    rowwise() %>%
+    do(data.frame(., ClimbRatesFunction(.$PA, .$Cd0, .$rho, .$Vinf, .$S, .$K, .$W))) %>%
+    ungroup()
+  
+  ClimbInt <- function(inp, h) {
+    Int <- inp[rep(row.names(inp), each = length(h)), 1:length(inp)]
+    Int$h <- h
+    Int <- StandardAtomsphere(Int) %>%
+      #I'm done.
+    
+  }
+  
 }
 
 
