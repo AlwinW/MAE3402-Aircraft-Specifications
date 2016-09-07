@@ -3,20 +3,20 @@
 #============================
 
 ## Install Packages ======================================================================
-install.packages(c(
-  "shiny",
-  "shinyAce",
-  "rsconnect",
-  "MASS",
-  "lazyeval",
-  "tidyr",
-  "dplyr",
-  "purrr",
-  "broom",
-  "ggplot2",
-  "RColorBrewer",
-  "reshape2"
-))
+# install.packages(c(
+#   "shiny",
+#   "shinyAce",
+#   "rsconnect",
+#   "MASS",
+#   "lazyeval",
+#   "tidyr",
+#   "dplyr",
+#   "purrr",
+#   "broom",
+#   "ggplot2",
+#   "RColorBrewer",
+#   "reshape2"
+# ))
 
 ## Load Packages ======================================================================
 library(shiny)

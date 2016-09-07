@@ -60,19 +60,19 @@ InpSpecs <- function(inputvals, specifications) {
 ## Three cases on takeoff ======================================================================
 # Accelerate to V1 then brake to stop
 AccelerateStop <- function(V1) {
-  RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
-    RecurTrapzd(function(x) x^2 / (coef$A[3] + coef$B[3] * x + coef$C[3] * x^3), V1, 10^-8, 10^-4)
-}
+  integrate(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1)[[1]] +
+    integrate(function(x) x^2 / (coef$A[3] + coef$B[3] * x + coef$C[3] * x^3), V1, 0)[[1]]
+  }
 # Accelerate to V1 then continue after engine failure to V2 + 3 seconds reaction + air distance 
 AccelerateContinue <- function(V1) {
-  RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1, 10^-4) +
-    RecurTrapzd(function(x) x^2 / (coef$A[2] + coef$B[2] * x + coef$C[2] * x^3), V1, coef$Vlof[2], 10^-4) +
+  integrate(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1)[[1]] +
+    integrate(function(x) x^2 / (coef$A[2] + coef$B[2] * x + coef$C[2] * x^3), V1, coef$Vlof[2])[[1]] +
     3 * coef$Vlof[2] +
     AirDistance$Sair[2]
 }
 # Accelerate to V2 + 3 seconds reaction + air distance
 AccelerateLiftOff <- function() {
-  (RecurTrapzd(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, coef$Vlof[1], 10^-4) +
+  (integrate(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, coef$Vlof[1])[[1]] +
      3 * coef$Vlof[1]+
      AirDistance$Sair[1]) * 1.15
 }
@@ -162,6 +162,7 @@ TakeOff <- function(inp, iteration = FALSE) {
     ungroup()
   AirDistance <- data.frame(select(AirDistance, type, R, gamma, hTR, ST, SC, Sair))
   #--- Determine the BFL
+  ## NOTE I SHOULD ALLOW FOR 1s FOR THE PILOT TO REALISE THE ENGINE FAILURE (RAYMER)
   V1 = ModifiedSecant(function(x) AccelerateStop(x) - AccelerateContinue(x), coef$Vlof[1], 0.01, 1e-4, positive = TRUE)
   BFL = AccelerateStop(V1)
   #--- Plotting Data
@@ -191,8 +192,9 @@ ClimbRates <- function(inp) {
       Cd = Cd0 + K * Cl^2,
       PA = PA(P0eng, sigma) * Ne) %>%
     rowwise() %>%
-    do(data.frame(., ClimbRatesFunction(.$PA, .$Cd0, .$rho, .$Vinf, .$S, .$K, .$W)))
-  return(out)
+    do(data.frame(., ClimbRatesFunction(.$PA, .$Cd0, .$rho, .$Vinf, .$S, .$K, .$W))) %>%
+    ungroup()
+  return(data.frame(out))
 }
 
 
