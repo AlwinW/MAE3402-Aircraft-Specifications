@@ -32,3 +32,10 @@ library(ggplot2)
 library(RColorBrewer)
 library(reshape2)
 
+## Run Scripts ======================================================================
+source("Helper Standard Atmosphere.R")
+source("Helper Initial Values.R")
+source("Helper Numerical Methods.R")
+
+theme_set(theme_linedraw())
+options(scipen = 10)
