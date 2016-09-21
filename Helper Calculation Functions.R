@@ -11,8 +11,8 @@ Vmin <- function(rho, WS, Clmax)
   sqrt(2/rho * WS * 1/Clmax)
 
 ## Power Derating Function ======================================================================
-PA <- function(P0eng, sigma)
-  P0eng * sigma^inputvals$alt_s
+PA <- function(P0eng, Ne, sigma, Vinf)
+  P0eng * Ne * sigma^inputvals$alt_s
 
 ## K Effective Due to Ground Effect ======================================================================
 Keff <- function(K, h, b)
@@ -141,7 +141,7 @@ TakeOff <- function(inp, iteration = FALSE) {
       Cd  = Cd0G + Keff * ClG ^ 2,
       Vstall = Vmin(rho, WS, Clclean + Clflaps),
       Vlof = 1.1 * Vstall,
-      A = g * (PA(P0eng, sigma) * Ne / W),
+      A = g * (PA(P0eng, Ne, sigma, Vlof) / W),
       B = g * (- mu),
       C = g * (rho/2 * 1/WS * (mu * Cl - Cd))
     )
@@ -156,7 +156,7 @@ TakeOff <- function(inp, iteration = FALSE) {
     StandardAtomsphere(.) %>%
     mutate(ClTR = Clclean + Clflaps, 
            Vstall = Vmin(rho, WS, ClTR), VTR = Vstall * 1.15,
-           PA = PA(P0eng * Ne, sigma), TA = PA / VTR,
+           PA = PA(P0eng, Ne, sigma, VTR), TA = PA / VTR,
            qinf = 1/2 * rho * VTR^2, Cd = Cd0 + K * ClTR^2,
            D = qinf * S * Cd, L = qinf * S * ClTR) %>%
     rowwise() %>%
@@ -181,7 +181,9 @@ TakeOff <- function(inp, iteration = FALSE) {
       BFL = AccelerateStop(coef, AirDistance, V1, V2),
       V1 = V1,
       V2 = V2) %>%
-      mutate(TakeOffDistance = max(NTO, BFL))
+      mutate(
+        NTOgr = NTO - AirDistance$Sair[1] * 1.15,
+        TakeOffDistance = max(NTO, BFL))
   )
 }
 
@@ -205,7 +207,7 @@ ClimbRates <- function(inp, iteration = FALSE) {
       qinf = 1/2 * rho * Vinf^2,
       Cl = W / (qinf * S),
       Cd = Cd0 + K * Cl^2,
-      PA = PA(P0eng, sigma) * Ne) %>%
+      PA = PA(P0eng, Ne, sigma, Vinf)) %>%
     rowwise() %>%
     do(data.frame(., ClimbRatesFunction(.$PA, .$Cd0, .$rho, .$Vinf, .$S, .$K, .$W))) %>%
     ungroup()
@@ -258,7 +260,7 @@ Landing <- function(inp, iteration = FALSE) {
       Cl = ClG,
       Keff = Keff(K, hground, b),
       Cd  = Cd0G + Keff * ClG ^ 2,
-      A = g * (PA(P0eng, sigma) * Ne / W),
+      A = g * (PA(P0eng, Ne, sigma, Vtd) / W),
       B = g * (- mu),
       C = g * (rho/2 * 1/WS * (mu * Cl - Cd))
     )
@@ -313,7 +315,7 @@ PowerUsage <- function(inp, iteration = FALSE, resolution = 10) {
     Int = mutate(Int,
       TR = p*V^2*Cd + mu*(W - p*V^2*Cl),
       PR = TR * V,
-      accel = (PA(P0eng, sigma) * Ne/V - p*V^2*Cd - mu*(W - p*V^2*Cl)) / m,
+      accel = (PA(P0eng, Ne, sigma, V)/V - p*V^2*Cd - mu*(W - p*V^2*Cl)) / m,
       Eeng =  PR/ accel)
     return(Int)
   }
@@ -348,7 +350,7 @@ PowerUsage <- function(inp, iteration = FALSE, resolution = 10) {
       mutate(
         Vstall = Vmin(rho, WS, Clmax),
         Vinf = Vstall * k,
-        PA = PA(P0eng, sigma) * Ne) %>%
+        PA = PA(P0eng, Ne, sigma, Vinf)) %>%
       rowwise() %>%
       do(data.frame(., ClimbRatesFunction(.$PA, .$Cd0, .$rho, .$Vinf, .$S, .$K, .$W))) %>%
       ungroup()
@@ -379,7 +381,7 @@ PowerUsage <- function(inp, iteration = FALSE, resolution = 10) {
              Cl = W/(qinf * S),
              Cd = Cd0 + K*Cl^2,
              D = qinf*S*Cd,
-             PA = PA(P0eng, sigma)*Ne,
+             PA = PA(P0eng, Ne, sigma, V),
              TA = PA/V,
              accel = (TA - D) / m,
              Eeng =  PA/ accel)
