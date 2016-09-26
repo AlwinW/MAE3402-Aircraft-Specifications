@@ -51,6 +51,13 @@ ClimbRatesFunction <- function(P, Cd0, rho, V, S, K, W) {
 }
 
 ## Ground Roll Distances ======================================================================
+# Ground Acceleration
+GroundAcceleration <- function(inp) {
+  inp <- inp %>%
+    mutate(PA(P0eng, Ne, sigma, Vinf),
+           Ff = xSOMTHING + ALSKFJSF
+             )
+}
 # Accelerate to V1 then brake to stop
 AccelerateStop <- function(coef, AirDistance, V1, V2) {
   integrate(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V1)[[1]] +
