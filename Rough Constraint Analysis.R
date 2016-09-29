@@ -38,12 +38,12 @@ constraint <- constraint %>%
 ## Climb OEI 2nd Segment ======================================================================
     c = sqrt(1.2^2 * 2 / (rho_sl * ClTO)),
     Clseg2 = ClTO / 1.2^2,
-    Cdseg2 = Cd0G + K^2 * Clseg2,
+    Cdseg2 = Cd0G + K * Clseg2^2,
     PW_Seg2_Climb = (2 * (PerGrad2Seg/100 + Cdseg2/Clseg2) / (Etaprop/c)) * sqrt(WS),
 ## Climb at Cruise ======================================================================
     PW_Cruise_Climb = ClimbCruise/Etaprop + (2/(Etaprop * rho)) * sqrt((K * WS)/(3*Cd0)) * (1.155 * sqrt(4*Cd0*K)),
 ## Fly Near Clstar ======================================================================
-    WS_Clstar = 1/2 * rho * Vcruise^2 * sqrt(Cd0*K) 
+    WS_Clstar = 1/2 * rho * Vcruise^2 * sqrt(Cd0/K) 
   )
 
 print(constraint)
