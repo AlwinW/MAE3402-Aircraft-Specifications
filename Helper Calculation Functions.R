@@ -2,6 +2,15 @@
 #--- Calculations Functions
 #============================
 
+## Repeat Rows of a Dataframe ======================================================================
+RepeatRows <- function(data, each = 1) {
+  data <- data[rep(row.names(data), each = each), 1:length(data)]
+  return(as.data.frame(data))
+}
+
+# YO I CAN JUST DO: ##############3
+cbind(input_initial, WS) #... but then I get two WS columns >:(
+
 ## Calculate Cd given Cl ======================================================================
 Cd <- function(Cd0, K, Cl)
   Cd0 + K * Cl^2 # Parabolic Relation

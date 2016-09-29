@@ -1,10 +1,5 @@
 # NB requires functions from "Helper Calculation Functions.R"
 
-RepeatRows <- function(data, each = 1) {
-  data <- data[rep(row.names(data), each = each), 1:length(data)]
-  return(as.data.frame(data))
-}
-
 UpdateParams <- function(input) {
   input$b <- sqrt(input$AR * input$S)
   input$K <- 1/(pi * input$AR * input$e)
@@ -87,3 +82,34 @@ ggplot(filter(TakeOffLength, abs(thirddiff) <= 1000)) +
 
 ggplot(TakeOffLength) + 
   geom_line(aes(x = NTOgr, y = log(TOPApproach)))
+
+
+
+
+## Takeoff Ground Roll======================================================================
+#--- Summary of takeoff
+Takeoffout <- TakeOff(inp)
+#--- Initialise the takeoff
+PTOgr <- mutate(inp, h = 0) %>%
+  StandardAtomsphere(.) %>%
+  mutate(
+    p = 1/2 * rho * S,
+    Cl = ClG,
+    Keff = Keff(K, hground, b),
+    Cd  = Cd0G + Keff * ClG ^ 2)
+PTOgr$Ne <- 2
+PTOgr$mu <- as.double(filter(groundmu,names == "Dry Concrete") %>% select(brakesoff))
+
+# Integral for the power used rolling along the ground
+LevelRollInt <- function(inp, V){
+  Int <- inp[rep(row.names(inp), each = length(V)), 1:length(inp)]
+  Int$V <- V
+  Int = mutate(Int,
+               TR = p*V^2*Cd + mu*(W - p*V^2*Cl),
+               PR = TR * V,
+               accel = (PA(P0eng, Ne, sigma, V)/V - p*V^2*Cd - mu*(W - p*V^2*Cl)) / m,
+               Eeng =  PR/ accel)
+  return(Int)
+}
+# Power used on the takeoff ground roll
+integrate(function(x) LevelRollInt(PTOgr, x)$Eeng, 0, Takeoffout$V2)[[1]]
