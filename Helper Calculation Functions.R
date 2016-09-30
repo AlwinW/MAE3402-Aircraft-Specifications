@@ -9,7 +9,7 @@ RepeatRows <- function(data, each = 1) {
 }
 
 # YO I CAN JUST DO: ##############3
-cbind(input_initial, WS) #... but then I get two WS columns >:(
+#cbind(input_initial, WS) #... but then I get two WS columns >:(
 
 ## Calculate Cd given Cl ======================================================================
 Cd <- function(Cd0, K, Cl)

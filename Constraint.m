@@ -13,7 +13,7 @@ Wing_Loading_App = Clmax*(rhoSL/2)*(Vapp/1.3)^2;
 %Take off field length
 ClmaxTO = 2.7;
 TOFL = 1000; %Take off field length (runway length)
-a = Wing_Loading.^2 * (0.225/ClmaxTO^2);
+a = Wing_Loading.^2 * (0.255/ClmaxTO^2);
 b = (11.8/ClmaxTO)*Wing_Loading;
 c = -TOFL;
 
