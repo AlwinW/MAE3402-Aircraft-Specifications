@@ -82,10 +82,11 @@ wingopt <- cbind(inp, wingsurf) %>%
     3000, 0.001, 0.1))) %>%
   ungroup() %>%
   mutate(WbW0 = (Mbatt)/(Mbatt + Mnobatt),
+         MTOW = (Mbatt + Mnobatt)*g_sl,
          WS = (Mbatt + Mnobatt)/Sref * g_sl) %>%
   data.frame(.)
 
-sampleplot <- select(wingopt, Sref, SwetSref, Cd0cor, Mnobatt, Mbatt, WbW0, WS) %>%
+sampleplot <- select(wingopt, Sref, SwetSref, Cd0cor, MTOW, Swet, WS, WbW0) %>%
   gather(key = name, value = value, - Sref)
 
 ggplot(data = sampleplot) +
