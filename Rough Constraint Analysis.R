@@ -2,7 +2,11 @@
 #--- Constrain Analysis
 #============================
 
+<<<<<<< HEAD
 varWS = seq(1000,4000, by = 250)
+=======
+varWS = seq(500,3000, by = 250)
+>>>>>>> parent of 9b87bca... Added Empty Weight Fraction Constraint
 varClhls = seq(0.9,1.2, by = 0.3)
 
 constraint <- inp %>%
@@ -44,9 +48,12 @@ constraint <- constraint %>%
   mutate(
     ClTO = Clclean + Clflaps,
     ClLD = Clclean + Clhls,
+<<<<<<< HEAD
     # Vcruise = Mach * a,
     Vcruise = 140,
     qinf = 1/2 * rho * Vcruise^2,
+=======
+>>>>>>> parent of 9b87bca... Added Empty Weight Fraction Constraint
 ## Landinng Approach Speed ======================================================================
     WS_App = (ClLD) * (1/2 * rho_sl) * (Vappmax / 1.3) ^ 2,
 ## Takeoff Field Length ======================================================================
@@ -55,8 +62,14 @@ constraint <- constraint %>%
     TOc = - Srun,
     PW_TOFL = 2*TOa/(-TOb + sqrt(TOb^2 - 4*TOa*TOc)),
 ## Cruise Speed ======================================================================
+<<<<<<< HEAD
     Clcruise = WS / qinf * 0.912,
     PW_Cruise = (Vcruise*0.912)/(Etaprop*0.3720) * (Cd0/Clcruise + K*Clcruise),
+=======
+    Vcruise = Mach * a,
+    Clcruise = WS / (1/2 * rho * Vcruise^2),
+    PW_Cruise = (Vcruise/Etaprop) * (Cd0/Clcruise + K*Clcruise),
+>>>>>>> parent of 9b87bca... Added Empty Weight Fraction Constraint
 ## Climb at Ceilinng ======================================================================
     rho_ceil = 0.4958, #0.8491284, # DON'T HARD CODE IT LATER lasudkfhawikeusfha.sdkjfhawiskeufghaw.iskeufbghaswikuefasw.kiefu
     PW_Ceiling_Climb = ClimbCeil/(Etaprop*0.4365) + (2/((Etaprop*0.4365) * rho_ceil)) * sqrt((K * WS)/(3*Cd0)) * (1.155 * sqrt(4*Cd0*K)),
@@ -68,16 +81,21 @@ constraint <- constraint %>%
 ## Climb at Cruise ======================================================================
     PW_Cruise_Climb = ClimbCruise/Etaprop + (2/(Etaprop * rho)) * sqrt((K * WS)/(3*Cd0)) * (1.155 * sqrt(4*Cd0*K)),
 ## Fly Near Clstar ======================================================================
+<<<<<<< HEAD
     WS_Clstar = qinf * sqrt(Cd0/K)#,
 ## Empty Weight Fraction ======================================================================
     # WbW0 = (qinf  * Cd0 / WS + K / qinf * WS ) * 1.1 * g_sl / Etatotal,
     # WbW0_Max = 0.6,
     # WS_WbW0_Max = (WbW0_Max * qinf - sqrt(qinf^2 * (WbW0_Max^2 - 4*Cd0*(1.1*g_sl/Etatotal)^2*K))) / (2*(1.1*g_sl/Etatotal)*K)
+=======
+    WS_Clstar = 1/2 * rho * Vcruise^2 * sqrt(Cd0/K) 
+>>>>>>> parent of 9b87bca... Added Empty Weight Fraction Constraint
   )
 
 # print(constraint)
 
 ggplot(data = constraint, aes(x = WS)) +
+<<<<<<< HEAD
   geom_vline(aes(xintercept = WS_App, colour = "Landing")) +
   # geom_vline(aes(xintercept = WS_Clstar, colour = "Clstar")) +
   # geom_vline(aes(xintercept = WS_WbW0_Max, colour = "Wb/W0")) +
@@ -91,3 +109,13 @@ ggplot(data = constraint, aes(x = WS)) +
 # ggplot(data = constraint, aes(x = WS)) +
 #   geom_line(aes(y = WbW0)) +
 #   facet_grid(~Clhls)
+=======
+  geom_vline(aes(xintercept = WS_App)) +
+  geom_vline(aes(xintercept = WS_Clstar)) +
+  geom_line(aes(y = PW_TOFL)) +
+  geom_line(aes(y = PW_Cruise)) +
+  geom_line(aes(y = PW_Ceiling_Climb)) +
+  geom_line(aes(y = PW_Seg2_Climb)) +
+  geom_line(aes(y = PW_Cruise_Climb)) + 
+  facet_grid(~Clhls)
+>>>>>>> parent of 9b87bca... Added Empty Weight Fraction Constraint
