@@ -2,6 +2,11 @@
 #--- Constrain Analysis
 #============================
 
+# NOTE:
+# I probably should have set it up like this:
+#   constraint PW curves
+#   constraint WS curves
+
 varWS = seq(500,3000, by = 250)
 varClhls = seq(0.9,1.2, by = 0.3)
 
