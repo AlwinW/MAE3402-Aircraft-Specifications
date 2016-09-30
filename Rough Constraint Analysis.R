@@ -40,7 +40,7 @@ constraint <- constraint %>%
     c = sqrt(1.2^2 * 2 / (rho_sl * ClTO)),
     Clseg2 = ClTO / 1.2^2,
     Cdseg2 = Cd0G + K * Clseg2^2,
-    PW_Seg2_Climb = (2 * (PerGrad2Seg/100 + Cdseg2/Clseg2) / (Etaprop/c)) * sqrt(WS),
+    PW_Seg2_Climb = 2 *((PerGrad2Seg/100 + Cdseg2/Clseg2)  * sqrt(WS) / (Etaprop/c)),
     ## Climb at Cruise ======================================================================
     PW_Cruise_Climb = ClimbCruise/Etaprop + (2/(Etaprop * rho)) * sqrt((K * WS)/(3*Cd0)) * (1.155 * sqrt(4*Cd0*K)),
     ## Fly Near Clstar ======================================================================
@@ -63,7 +63,7 @@ ggplot(data = constraint, aes(x = WS)) +
   geom_line(aes(y = PW_Seg2_Climb, colour = "2nd Segment OEI")) +
   geom_line(aes(y = PW_Cruise_Climb, colour = "Cruise Climb")) + 
   facet_grid(~Clhls)
-
-ggplot(data = constraint, aes(x = WS)) +
-  geom_line(aes(y = WbWe)) +
-  facet_grid(~Clhls)
+# 
+# ggplot(data = constraint, aes(x = WS)) +
+#   geom_line(aes(y = WbWe)) +
+#   facet_grid(~Clhls)
