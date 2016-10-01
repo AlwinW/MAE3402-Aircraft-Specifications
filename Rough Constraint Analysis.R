@@ -7,7 +7,7 @@
 #   constraint PW curves
 #   constraint WS curves
 
-varWS = seq(500,3000, by = 250)
+varWS = seq(1000,8000, by = 250)
 varClhls = seq(0.9,1.2, by = 0.3)
 
 constraint <- inp %>%
@@ -51,12 +51,14 @@ constraint <- constraint %>%
 ## Fly Near Clstar ======================================================================
     WS_Clstar = qinf * sqrt(Cd0/K),
 ## Empty Weight Fraction ======================================================================
-    WbWe = (qinf  * Cd0 / WS + K / qinf * WS ) * 1.1 * g_sl / Etatotal,
-    WbWe_Max = 0.6,
-    WS_WbW0_Max = (WbWe_Max * qinf - sqrt(qinf^2 * (WbWe_Max^2 - 4*Cd0*(1.1*g_sl/Etatotal)^2*K))) / (2*(1.1*g_sl/Etatotal)*K)
+    WbW0 = (qinf  * Cd0 / WS + K / qinf * WS ) * 1.1 * g_sl / Etatotal,
+    WbW0Cd0 = (qinf  * Cd0 / WS) * 1.1 * g_sl / Etatotal,
+    WbW0K = (K / qinf * WS ) * 1.1 * g_sl / Etatotal,
+    WbW0_Max = 0.6,
+    WS_WbW0_Max = (WbW0_Max * qinf - sqrt(qinf^2 * (WbW0_Max^2 - 4*Cd0*(1.1*g_sl/Etatotal)^2*K))) / (2*(1.1*g_sl/Etatotal)*K)
   )
 
-print(constraint)
+# print(constraint)
 
 ggplot(data = constraint, aes(x = WS)) +
   geom_vline(aes(xintercept = WS_App, colour = "Landing")) +
@@ -68,7 +70,9 @@ ggplot(data = constraint, aes(x = WS)) +
   geom_line(aes(y = PW_Seg2_Climb, colour = "2nd Segment OEI")) +
   geom_line(aes(y = PW_Cruise_Climb, colour = "Cruise Climb")) + 
   facet_grid(~Clhls)
-# 
-# ggplot(data = constraint, aes(x = WS)) +
-#   geom_line(aes(y = WbWe)) +
-#   facet_grid(~Clhls)
+
+ggplot(data = constraint, aes(x = WS, group = Clhls)) +
+  geom_line(aes(y = WbW0)) + 
+  geom_line(aes(y = WbW0Cd0), linetype = 2) +
+  geom_line(aes(y = WbW0K), linetype = 2) +
+  ggtitle("Constant Cd0, S values")
