@@ -7,7 +7,7 @@
 #   constraint PW curves
 #   constraint WS curves
 
-varWS = seq(1000,8000, by = 250)
+varWS = seq(2000,3000, by = 250)
 varClhls = seq(0.9,1.2, by = 0.3)
 
 constraint <- inp %>%

@@ -2,19 +2,13 @@
 #--- Sizing Iterations
 #============================
 
-# rootfindWbWo <- function(Mb, Sref, qinf, Cd0cor, K, Mnobatt, Etatotal, g_sl) {
-#   WStemp = ((Mb + Mnobatt) * g_sl)/Sref
-#   WbW0 = (qinf * Cd0cor/WStemp + K/qinf * WStemp) * g_sl* 1.1 / Etatotal - Mb/(Mb + Mnobatt)
-#   return(WbW0)
-# }
-
 rootfindWbWo <- function(Mb, Sref, qinf, Cd0cor, K, Mnobatt, Etatotal, g_sl) {
   WbW0 = (qinf * Cd0cor/(((Mb + Mnobatt) * g_sl)/Sref) + K/qinf * (((Mb + Mnobatt) * g_sl)/Sref)) * g_sl* 1.1 / Etatotal - Mb/(Mb + Mnobatt)
 }
 
-x = seq(3000, 6000, by = 100)
-plot(x, rootfindWbWo(x, 24.5, 3048.653, 0.0228938,  0.01924, 2725.182, 0.73, 9.8065))
-abline(h = 0, v = 4555.185, col = "lightgray", lty = 3)
+# x = seq(3000, 6000, by = 100)
+# plot(x, rootfindWbWo(x, 24.5, 3048.653, 0.0228938,  0.01924, 2725.182, 0.73, 9.8065))
+# abline(h = 0, v = 4555.185, col = "lightgray", lty = 3)
 
 ModifiedSecant(function(Mb) {
   rootfindWbWo(Mb, 24.5, 3048.653, 0.0228938,  0.01924, 2725.182, 0.73, 9.8065)},
@@ -64,7 +58,7 @@ mass_summary <- data.frame(
 )
 
 # Vary the wing surface areas
-varSrefwing <- seq(20, 40, by = 1)
+varSrefwing <- seq(17, 45, by = 1)
 # varSrefwing = 25
 wingsurf <- data.frame(
     wingref = varSrefwing,
@@ -125,11 +119,11 @@ ggplot(data = sampleplot) +
   geom_line(aes(x = Sref, y = value)) +
   facet_wrap(~name, scales = "free_y")
 
-ggplot(data = wingopt) +
-  geom_line(aes(x = WS, y = WbW0))
+# ggplot(data = wingopt) +
+#   geom_line(aes(x = WS, y = WbW0))
 
-ggplot(data = wingopt, aes(x = WS)) +
-  geom_line(aes(y = WbW0_check)) + 
-  geom_line(aes(y = WbW0Cd0_check), linetype = 2) +
-  geom_line(aes(y = WbW0K_check), linetype = 2) +
-  ggtitle("Variable Cd0")
+# ggplot(data = wingopt, aes(x = WS)) +
+#   geom_line(aes(y = WbW0_check)) + 
+#   geom_line(aes(y = WbW0Cd0_check), linetype = 2) +
+#   geom_line(aes(y = WbW0K_check), linetype = 2) +
+#   ggtitle("Variable Cd0")
