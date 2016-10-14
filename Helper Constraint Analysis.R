@@ -14,8 +14,8 @@ varWbW0_Max = seq(0.525,0.65, by = 0.025)
 constraint <- inp %>%
   select(-S, -b, -m, -W, -P0eng, -P0) %>%
   mutate(h = AltCruise,
-         Etaprop = 0.85,
-         Etatotal = 0.80,
+         Etaprop = 1, #0.85,
+         Etatotal = 1, #0.80,
          BatteryFactor = 1.0) %>%
   StandardAtomsphere(.)
 
