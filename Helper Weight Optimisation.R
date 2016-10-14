@@ -95,6 +95,7 @@ Weight_Estimate <- function(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE)
       Cd0 = Cd0,
       W_bat = W_bat / kg_to_lb
     )
+    
     return(list(
       Weights = Weights,
       Working_SI = Working_SI

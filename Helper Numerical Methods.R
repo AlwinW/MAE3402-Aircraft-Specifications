@@ -41,7 +41,7 @@ ModifiedSecant <- function(func, xr, del, toler, positive = FALSE) {
     xr_old = xr
     xr = xr_old - (del * fx1) / (fx2 - fx1)
     if (xr < 0 & positive == TRUE)
-      return(NULL)
+      return(NA)
   }
   return(xr)
 }
