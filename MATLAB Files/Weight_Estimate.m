@@ -17,7 +17,7 @@ AR_HT = 7.31;
 S_VT = 1.11/0.3048^2; %SI
 AR_VT  = 1.77;
 S_Fuse = 51.5/0.3048^2; %SI
-.L_Fuse = 12/0.3048; %SI Conversion
+L_Fuse = 12/0.3048; %SI Conversion
 W_Fuse = 2.08/0.3048; %Fuselage Width
 L_D = 30; %(L/D)
 W_en = 50/0.45; %SI (kg) to pound mass
@@ -56,5 +56,5 @@ matrix = {'wing' 'HT' 'VT' 'Fuse' 'LGM' 'LGN' 'Engine' 'Battery', 'Payload','Fli
 Weight_Tot = sum(WE);
 Weight_Tot_SI = Weight_Tot * 0.453592;
 
-fprintf('Total mass (kg) is %f',Weight_Tot_SI);
+fprintf('Total mass (kg) is %f\n',Weight_Tot_SI);
 

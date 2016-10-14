@@ -62,7 +62,7 @@ varSrefwing <- seq(17, 45, by = 1)
 # varSrefwing = 25
 wingsurf <- data.frame(
     wingref = varSrefwing,
-    Cfe = 0.0040, ## NOT 0.0045, adjusted to meed our 0.0191!!
+    Cfe = 0.0045, ## NOT 0.0045, adjusted to meed our 0.0191!!
     Swetfixed = 70) %>%
   mutate(
     htailref = wingref * Sref_breakdown$hratio,
