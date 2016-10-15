@@ -30,17 +30,27 @@ weightoptim <- weightoptim %>%
         W_dg_SI - Weight_Estimate(.$WS, .$PW, W_dg_SI, composite = TRUE, iteration = TRUE),
       6000, 0.001,0.01, positive = TRUE
     )
-    # ,
-    # # Determine other values
-    # Weight_Estimate(.$WS, .$PW, .$MTOM, composite = TRUE, iteration = FALSE)[[1]]
+  )) %>%
+  do(data.frame(
+    ., 
+    Weight_Estimate(.$WS, .$PW, .$MTOM, composite = TRUE, iteration = FALSE)[[1]]
   ))
 
-
-
-ggplot(data = weightoptim, aes(x = WS, y = PW)) +
+points <- ggplot(data = weightoptim, aes(x = WS, y = PW)) +
   geom_point(aes(colour = MTOM, size = 1/MTOM))
 
-ggplot(data = weightoptim, aes(x = WS, y = PW)) + 
-  stat_contour(aes(z = MTOM, colour = ..level..), 
-               breaks=c(c(seq(4000, 7000, 100), seq(7000, 10000, 250)))
+MTOMcontourplot <- ggplot(data = weightoptim, aes(x = WS, y = PW)) + 
+  stat_contour(aes(z = MTOM, colour = ..level..)#, 
+               # breaks=c(c(seq(4000, 8000, 100), seq(7000, 20000, 500)))
                )
+direct.label(MTOMcontourplot, method = "top.pieces")
+
+BatteryFractioncontourplot <- ggplot(data = weightoptim, aes(x = WS, y = PW)) + 
+  stat_contour(aes(z = batteries_Fraction, colour = ..level..)
+  )
+direct.label(BatteryFractioncontourplot, method = "top.pieces")
+
+Swingcontourplot <- ggplot(data = weightoptim, aes(x = WS, y = PW)) + 
+  stat_contour(aes(z = S_wing, colour = ..level..)
+  )
+direct.label(Swingcontourplot, method = "top.pieces")
