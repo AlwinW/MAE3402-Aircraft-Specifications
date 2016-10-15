@@ -58,7 +58,7 @@ Weight_Estimate <- function(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE)
   Cd0 = 0.0045 * S_wet / S_wing
   W_bat = (q_SI  * Cd0 / WS + K / q_SI * WS ) * BatteryFactor * 9.8065 / Etatotal * W_dg
   # Raymer Weights Correlation
-  Weights <- data.frame(
+  WeightsRow <- data.frame(
     wing = ((0.036*S_wing^0.758)*W_bat^0.0035*((AR)^0.6)*(q^0.006)*(lambda^0.04)*((100*(t_c))^-0.3)*((N_z*W_dg)^0.49)),
     htail = (0.016*(N_z*W_dg)^0.414)*(q^0.168)*(S_HT^0.896)*((100*(t_c))^-0.12)*(AR_HT)^0.043*(lambda^-0.02),
     vtail = 0.073*((N_z*W_dg)^0.376)*q^0.122*(S_VT^0.873)*((100*t_c)^-0.49)*((AR_VT)^0.357)*lambda^0.039,
@@ -76,15 +76,17 @@ Weight_Estimate <- function(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE)
   )
   # Determine if advanced composites are used or not
   if (composite == TRUE)
-    Fudge = Fudge_Factors
+    Fudge_Factors = c(0.85, 0.83, 0.83, 0.90, 0.95, 0.95, 1, 1, 1, 1, 1, 1, 1, 1)
   else
-    Fudge = rep(1, 14)
-  W_est = sum(Weights*Fudge)/kg_to_lb
+    Fudge_Factors = rep(1, 14)
+  W_est = sum(WeightsRow*Fudge)/kg_to_lb
   # Output the result
   if (iteration == TRUE)
+    # Quick one value output for convergence
     return(W_est)
   else{
-    # Calculation summary
+    # Full output in a list
+    # List of variables used
     Working_SI <- data.frame(
       S_wing = S,
       P = P,
@@ -95,9 +97,41 @@ Weight_Estimate <- function(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE)
       Cd0 = Cd0,
       W_bat = W_bat / kg_to_lb
     )
-    
+    # Tabulated Weights - Imperial and SI
+    Weights <- WeightsRow %>%
+      gather(key = Part, value = General_Aviation) %>%
+      data.frame(., Advanced_Composites = t(WeightsRow * Fudge_Factors))
+    Total_Weights = data.frame(
+      Part = "Total",
+      General_Aviation = sum(Weights[, 2]), 
+      Advanced_Composites = sum(Weights[, 3]))
+    Weights <- rbind(Weights, Total_Weights)
+    rownames(Weights) <- NULL
+    Total_Weights_SI <- data.frame(
+      Part = Total_Weights[, 1],
+      Total_Weights[, 2:3] / kg_to_lb) %>%
+      mutate(Saving = General_Aviation - Advanced_Composites)
+    Weights_SI <- data.frame(
+      Part = Weights[,1], 
+      Weights[,2:3]/kg_to_lb)
+    # Tabulated Weights Fraction
+    Weights_Fraction <- data.frame(
+      Part = Weights[,1], 
+      General_Aviation = Weights[,2]/as.double(Total_Weights[2]), 
+      Advanced_Composites = Weights[,3]/as.double(Total_Weights[3]))
+    # Row data frame for cbind
+    Rowsummary <- cbind(
+      W_est = W_est,
+      set_names(Total_Weights_SI[,2:4], paste(colnames(Total_Weights_SI[,2:4]),"Total", sep="_")),
+      WeightsRow/kg_to_lb,
+      set_names(WeightsRow/kg_to_lb/W_est, paste(colnames(WeightsRow),"Fraction", sep="_")),
+      Working_SI
+    )
     return(list(
-      Weights = Weights,
+      Rowsummary = Rowsummary,
+      Weights = Weights_SI,
+      Total_Weights_SI =  Total_Weights_SI,
+      Weights_Fraction = Weights_Fraction,
       Working_SI = Working_SI
     ))
   }
@@ -108,24 +142,24 @@ W_dg_SI = ModifiedSecant(function(W_dg_SI) W_dg_SI - Weight_Estimate(WS, PW, W_d
                          6000, 0.001, 0.01, positive = TRUE)
 
 # PUT THIS PART INTO THE FUNCTION ABOVE FOR ITERATION != TRUE
-Weights = Weight_Estimate(WS, PW, W_dg_SI, composite = TRUE, iteration = FALSE)[[1]]
-Weights <- Weights %>%
-  gather(key = Part, value = General_Aviation) %>%
-  data.frame(., Advanced_Composites = t(Weights * Fudge_Factors))
-Total_Weights = data.frame(
-  Part = "Total",
-  General_Aviation = sum(Weights[, 2]), 
-  Advanced_Composites = sum(Weights[, 3]))
-Weights <- rbind(Weights, Total_Weights)
-rownames(Weights) <- NULL
-Total_Weights_SI <- data.frame(
-  Part = Total_Weights[, 1],
-  Total_Weights[, 2:3] / kg_to_lb) %>%
-  mutate(Saving = General_Aviation - Advanced_Composites)
-Weights_SI <- data.frame(
-  Part = Weights[,1], 
-  Weights[,2:3]/kg_to_lb)
-Weights_Fraction <- data.frame(
-  Part = Weights[,1], 
-  General_Aviation = Weights[,2]/as.double(Total_Weights[2]), 
-  Advanced_Composites = Weights[,3]/as.double(Total_Weights[3]))
+# Weights = Weight_Estimate(WS, PW, W_dg_SI, composite = TRUE, iteration = FALSE)[[1]]
+# Weights <- Weights %>%
+#   gather(key = Part, value = General_Aviation) %>%
+#   data.frame(., Advanced_Composites = t(Weights * Fudge_Factors))
+# Total_Weights = data.frame(
+#   Part = "Total",
+#   General_Aviation = sum(Weights[, 2]), 
+#   Advanced_Composites = sum(Weights[, 3]))
+# Weights <- rbind(Weights, Total_Weights)
+# rownames(Weights) <- NULL
+# Total_Weights_SI <- data.frame(
+#   Part = Total_Weights[, 1],
+#   Total_Weights[, 2:3] / kg_to_lb) %>%
+#   mutate(Saving = General_Aviation - Advanced_Composites)
+# Weights_SI <- data.frame(
+#   Part = Weights[,1], 
+#   Weights[,2:3]/kg_to_lb)
+# Weights_Fraction <- data.frame(
+#   Part = Weights[,1], 
+#   General_Aviation = Weights[,2]/as.double(Total_Weights[2]), 
+#   Advanced_Composites = Weights[,3]/as.double(Total_Weights[3]))

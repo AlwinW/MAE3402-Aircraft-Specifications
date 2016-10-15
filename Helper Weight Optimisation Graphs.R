@@ -4,14 +4,14 @@
 ## Weight Estimations based on Raymer pp 460
 
 # Effect of Aspect Ratio
-ARvarplot <- data.frame(AR = NA, MTOM = NA)
-for (AR in seq(18,100,2)){
-  W_dg_SI = ModifiedSecant(function(W_dg_SI) W_dg_SI - Weight_Estimate(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE), 
-                           6000, 0.001, 0.01, positive = TRUE)
-  ARvarplot <- rbind(ARvarplot, data.frame(AR = AR, MTOM = W_dg_SI))
-}
-
-ggplot(data = ARvarplot, aes(x = AR, y = MTOM)) + geom_point()
+# ARvarplot <- data.frame(AR = NA, MTOM = NA)
+# for (AR in seq(18,100,2)){
+#   W_dg_SI = ModifiedSecant(function(W_dg_SI) W_dg_SI - Weight_Estimate(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE), 
+#                            6000, 0.001, 0.01, positive = TRUE)
+#   ARvarplot <- rbind(ARvarplot, data.frame(AR = AR, MTOM = W_dg_SI))
+# }
+# 
+# ggplot(data = ARvarplot, aes(x = AR, y = MTOM)) + geom_point()
 
 
 # Grid of data values
@@ -21,12 +21,26 @@ weightoptim <- expand.grid(WS = varWS, PW = varPW)
 
 weightoptim <- weightoptim %>%
   rowwise() %>%
-  do(data.frame(.,
+  do(data.frame(
+    # Previous WS and PW values
+    .,
+    # Determine MTOM
     MTOM = ModifiedSecant(
       function(W_dg_SI)
         W_dg_SI - Weight_Estimate(.$WS, .$PW, W_dg_SI, composite = TRUE, iteration = TRUE),
       6000, 0.001,0.01, positive = TRUE
-  )))
+    )
+    # ,
+    # # Determine other values
+    # Weight_Estimate(.$WS, .$PW, .$MTOM, composite = TRUE, iteration = FALSE)[[1]]
+  ))
+
+
 
 ggplot(data = weightoptim, aes(x = WS, y = PW)) +
   geom_point(aes(colour = MTOM, size = 1/MTOM))
+
+ggplot(data = weightoptim, aes(x = WS, y = PW)) + 
+  stat_contour(aes(z = MTOM, colour = ..level..), 
+               breaks=c(c(seq(4000, 7000, 100), seq(7000, 10000, 250)))
+               )
