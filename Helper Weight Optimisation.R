@@ -77,6 +77,7 @@ Weight_Estimate <- function(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE)
   # Determine if advanced composites are used or not
   if (composite == TRUE)
     Fudge_Factors = c(0.85, 0.83, 0.83, 0.90, 0.95, 0.95, 1, 1, 1, 1, 1, 1, 1, 1)
+  # OR ANOTHER CONDITION WITH PETE'S FACTORS INSTEAD?
   else
     Fudge_Factors = rep(1, 14)
   W_est = sum(WeightsRow*Fudge)/kg_to_lb
@@ -141,25 +142,3 @@ Weight_Estimate <- function(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE)
 W_dg_SI = ModifiedSecant(function(W_dg_SI) W_dg_SI - Weight_Estimate(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE), 
                          6000, 0.001, 0.01, positive = TRUE)
 
-# PUT THIS PART INTO THE FUNCTION ABOVE FOR ITERATION != TRUE
-# Weights = Weight_Estimate(WS, PW, W_dg_SI, composite = TRUE, iteration = FALSE)[[1]]
-# Weights <- Weights %>%
-#   gather(key = Part, value = General_Aviation) %>%
-#   data.frame(., Advanced_Composites = t(Weights * Fudge_Factors))
-# Total_Weights = data.frame(
-#   Part = "Total",
-#   General_Aviation = sum(Weights[, 2]), 
-#   Advanced_Composites = sum(Weights[, 3]))
-# Weights <- rbind(Weights, Total_Weights)
-# rownames(Weights) <- NULL
-# Total_Weights_SI <- data.frame(
-#   Part = Total_Weights[, 1],
-#   Total_Weights[, 2:3] / kg_to_lb) %>%
-#   mutate(Saving = General_Aviation - Advanced_Composites)
-# Weights_SI <- data.frame(
-#   Part = Weights[,1], 
-#   Weights[,2:3]/kg_to_lb)
-# Weights_Fraction <- data.frame(
-#   Part = Weights[,1], 
-#   General_Aviation = Weights[,2]/as.double(Total_Weights[2]), 
-#   Advanced_Composites = Weights[,3]/as.double(Total_Weights[3]))

@@ -16,7 +16,9 @@ constraint <- inp %>%
   mutate(h = AltCruise,
          Etaprop = 0.85,
          Etatotal = 0.80,
-         BatteryFactor = 1.0) %>%
+         BatteryFactor = 1.0,
+         Cd0G = 0.18,
+         EtapropG = 0.7) %>%
   StandardAtomsphere(.)
 
 constraint <-  RepeatRows(constraint, length(varClhls))
@@ -52,7 +54,7 @@ constraint <- constraint %>%
     c = sqrt(1.2^2 * 2 / (rho_sl * ClTO)),
     Clseg2 = ClTO / 1.2^2,
     Cdseg2 = Cd0G + K * Clseg2^2,
-    PW_Seg2_Climb = 2 *((PerGrad2Seg/100 + Cdseg2/Clseg2)  * sqrt(WS) / (Etaprop/c)),
+    PW_Seg2_Climb = 2 *((PerGrad2Seg/100 + Cdseg2/Clseg2)  * sqrt(WS) / (EtapropG/c)),
 ## Climb at Cruise ======================================================================
     PW_Cruise_Climb = ClimbCruise/Etaprop + (2/(Etaprop * rho)) * sqrt((K * WS)/(3*Cd0)) * (1.155 * sqrt(4*Cd0*K)),
 ## Fly Near Clstar ======================================================================
@@ -104,15 +106,15 @@ ggplot(data = constraint, aes(x = WS, group = Clhls)) +
              label = "Constant Cd0, AR, e and eta")
 
 ## Battery Fraction ======================================================================
-ggplot(data = constraint, aes(x = WS, group = Clhls)) +
+BatteryFractionPlot <- ggplot(data = constraint, aes(x = WS, group = Clhls)) +
   geom_line(aes(y = WbW0)) +
   geom_line(aes(y = WbW0Cd0), linetype = 2) +
   geom_line(aes(y = WbW0K), linetype = 2) +
   geom_label(data = filter(constraint, WS == varWS[2]),
-             aes(x = WS, y = WbW0Cd0, label = "Cd0 Contribution"), 
+             aes(x = WS, y = WbW0Cd0, label = "Cd0 Contribution"),
              hjust = 0, vjust = -0.1, show.legend = FALSE) +
   geom_label(data = filter(constraint, WS == varWS[2]),
-             aes(x = WS, y = WbW0K, label = "K Contribution"), 
+             aes(x = WS, y = WbW0K, label = "K Contribution"),
              hjust = 0, vjust = 1.1, show.legend = FALSE) +
   ggtitle("Battery Mass Fraction") +
   geom_label(x = Inf, y = Inf, vjust = 1.5, hjust = 1.1,

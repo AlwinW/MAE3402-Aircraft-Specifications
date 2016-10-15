@@ -31,6 +31,7 @@ library(broom)
 library(ggplot2)
 library(RColorBrewer)
 library(reshape2)
+library(directlabels)
 
 ## Run Scripts ======================================================================
 source("Helper Standard Atmosphere.R")
