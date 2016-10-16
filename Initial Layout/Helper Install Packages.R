@@ -38,7 +38,7 @@ library(directlabels)
 source("Helper Standard Atmosphere.R")
 source("Helper Initial Values.R")
 source("Helper Numerical Methods.R")
-# source("Helper Calculation Functions.R")
+source("Helper Calculation Functions.R")
 
 # theme_set(theme_linedraw())
 theme_set(theme_bw())
