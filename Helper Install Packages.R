@@ -20,24 +20,29 @@
 # ))
 
 ## Load Packages ======================================================================
-library(shiny)
-library(shinyAce)
-library(rsconnect)
-library(MASS)
-library(lazyeval)
-library(tidyr)
-library(dplyr)
-library(purrr)
-library(broom)
-library(ggplot2)
-library(RColorBrewer)
-library(reshape2)
-library(directlabels)
+LoadPackages <- function() {
+  library(shiny,shinyAce)
+  library(rsconnect)
+  library(MASS)
+  library(lazyeval)
+  library(tidyr)
+  library(dplyr)
+  library(purrr)
+  library(broom)
+  library(ggplot2)
+  library(RColorBrewer)
+  library(reshape2)
+  library(directlabels)
+}
+
+suppressWarnings(suppressMessages(LoadPackages()))
 
 ## Run Scripts ======================================================================
 source("Helper Standard Atmosphere.R")
 source("Helper Initial Values.R")
 source("Helper Numerical Methods.R")
+source("Helper Dataframes.R")
+source("Helper Aerodynamic Calculations.R")
 # source("Helper Calculation Functions.R")
 
 # theme_set(theme_linedraw())
