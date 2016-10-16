@@ -46,7 +46,7 @@ AccelerateLiftOff <- function(TO, AirDistance, V2) {
 }
 
 ## Takeoff ======================================================================
-TakeOffLength <- function(inp) {
+TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO) {
   #--- Set up the initial parameters to solve for
   TO <- RepeatRows(inp, 3)
   TO$segment <- "Takeoff"
@@ -94,7 +94,6 @@ TakeOffLength <- function(inp) {
       K = Keff(K, hground, b),
       Cd = Cd0 + K * Cl^2
   )
-  V2 = 1.1 * inp$VsTO
   #--- Test if the graphs will cross over before V2
   BFL <- try(ModifiedSecant(function(V1) AccelerateContinue(TO, AirDistance, V1, V2) - AccelerateStop(TO, V1), 
                              V2, 0.01, 1e-4, positive = TRUE), silent = TRUE)
@@ -107,7 +106,7 @@ TakeOffLength <- function(inp) {
     BFL = 0
   }
   #--- Output the results
-  output <- data.frame(
+  TOoutput <- data.frame(
     V1 = V1,
     V2 = V2,
     BFL = BFL,
@@ -115,7 +114,36 @@ TakeOffLength <- function(inp) {
   ) %>%
     mutate(
       NTOgr = NTO - AirDistance$Sair[1],
-      TakeOffLength = max(BFL, NTO)
+      TakeOffLength = max(BFL*as.numeric(V1 <= V2), NTO)
     )
-  return(output)
+  return(TOoutput)
 }
+#--- Plot of the takeoff curves
+TakeOffLengthPlot<- function(TO, AirDistance, TOoutput, inp) {
+  TOplotdata <- data.frame(
+    V1 = seq(0.00001, max(TOoutput$V1, TOoutput$V2)*1.02, len = 20),
+    V2 = TOoutput$V2) %>%
+    rowwise() %>%
+    do(data.frame(
+      .,
+      AccelerateStop = AccelerateStop(TO, .$V1),
+      AccelerateContinue = AccelerateContinue(TO, AirDistance, .$V1, .$V2)
+      ))
+  TOplotout <- ggplot(data = TOplotdata, aes(x = V1)) +
+    geom_hline(yintercept = inp$Srun, aes(colour = "Max Paved Runway")) + 
+    geom_line(aes(y = AccelerateStop, colour = "Accelerate-Stop")) + 
+    geom_line(aes(y = AccelerateContinue, colour = "Accelerate-Continue"))
+}
+
+## Climb ======================================================================
+
+
+
+
+
+
+
+
+
+
+
