@@ -39,10 +39,10 @@ suppressWarnings(suppressMessages(LoadPackages()))
 
 ## Run Scripts ======================================================================
 source("Helper Standard Atmosphere.R")
-source("Helper Initial Values.R")
 source("Helper Numerical Methods.R")
 source("Helper Dataframes.R")
-source("Helper Aerodynamic Calculations.R")
+source("Helper Aerodynamic Functions.R")
+source("Helper Initial Values.R")
 # source("Helper Calculation Functions.R")
 
 # theme_set(theme_linedraw())

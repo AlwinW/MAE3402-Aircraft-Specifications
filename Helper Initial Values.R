@@ -36,7 +36,10 @@ input_initial <- data.frame(
   # Shaft Power per Engin
   Pshafteng = 668100,
   Pshaft = 1336200,
-  etamech = 0.91238
+  etamech = 0.91238,
+  
+  # System Power
+  Powersys = 300000
 )
 
 ## Specifications ======================================================================
