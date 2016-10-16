@@ -4,8 +4,8 @@
 
 ## Groundroll ======================================================================
 GroundAcceleration <- function(inp, velval, intval = TRUE) {
-  # inp <- RepeatRows(inp, velval)
-  # inp$velval = velval
+  inp <- RepeatRows(inp, velval)
+  inp$velval = velval
   inp <- inp %>%
     mutate(
       qinf = 1/2 * rho * velval^2,
@@ -30,6 +30,13 @@ AccelerateStop <- function(TO, V1) {
   integrate(function(V) V/GroundAcceleration(filter(TO, type == "All Engines"), V), 0, V1)[[1]] + 
     V1 * (1) +
     integrate(function(V) V/GroundAcceleration(filter(TO, type == "Rejected Take-Off"), V), V1, 0)[[1]]
+}
+# Accelerate to V1 then continue after engine failure to V2 + 3 seconds reaction + air distance 
+AccelerateStop <- function(TO, AirDistance, V1, V2) {
+  integrate(function(V) V/GroundAcceleration(filter(TO, type == "All Engines"), V), 0, V1)[[1]] + 
+    integrate(function(V) V/GroundAcceleration(filter(TO, type == "One Engine Down"), V), V1, V2)[[1]] + 
+    V2 * (3) +
+    AirDistance$Sair[2]
 }
 
 ## Takeoff ======================================================================
