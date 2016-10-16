@@ -32,15 +32,21 @@ AccelerateStop <- function(TO, V1) {
     integrate(function(V) V/GroundAcceleration(filter(TO, type == "Rejected Take-Off"), V), V1, 0)[[1]]
 }
 # Accelerate to V1 then continue after engine failure to V2 + 3 seconds reaction + air distance 
-AccelerateStop <- function(TO, AirDistance, V1, V2) {
+AccelerateContinue <- function(TO, AirDistance, V1, V2) {
   integrate(function(V) V/GroundAcceleration(filter(TO, type == "All Engines"), V), 0, V1)[[1]] + 
     integrate(function(V) V/GroundAcceleration(filter(TO, type == "One Engine Down"), V), V1, V2)[[1]] + 
     V2 * (3) +
     AirDistance$Sair[2]
 }
+# Accelerate to V2 + 3 seconds reaction + air distance * Safety Factor 
+AccelerateLiftOff <- function(TO, AirDistance, V2) {
+  (integrate(function(V) V/GroundAcceleration(filter(TO, type == "All Engines"), V), 0, V2)[[1]] +
+     3 * V2 +
+     AirDistance$Sair[1]) * 1.15
+}
 
 ## Takeoff ======================================================================
-# TakeOff <- function(inp) {
+TakeOffLength <- function(inp) {
   #--- Set up the initial parameters to solve for
   TO <- RepeatRows(inp, 3)
   TO$segment <- "Takeoff"
@@ -87,5 +93,29 @@ AccelerateStop <- function(TO, AirDistance, V1, V2) {
     mutate(
       K = Keff(K, hground, b),
       Cd = Cd0 + K * Cl^2
+  )
+  V2 = 1.1 * inp$VsTO
+  #--- Test if the graphs will cross over before V2
+  BFL <- try(ModifiedSecant(function(V1) AccelerateContinue(TO, AirDistance, V1, V2) - AccelerateStop(TO, V1), 
+                             V2, 0.01, 1e-4, positive = TRUE), silent = TRUE)
+  if (is.numeric(BFL)){
+    V1 = ModifiedSecant(function(V1) AccelerateContinue(TO, AirDistance, V1, V2) - AccelerateStop(TO, V1), 
+                   V2, 0.01, 1e-4, positive = TRUE)
+    BFL = AccelerateContinue(TO, AirDistance, V1, V2)
+  } else {
+    V1 = NA
+    BFL = 0
+  }
+  #--- Output the results
+  output <- data.frame(
+    V1 = V1,
+    V2 = V2,
+    BFL = BFL,
+    NTO = AccelerateLiftOff(TO, AirDistance, V2)
+  ) %>%
+    mutate(
+      NTOgr = NTO - AirDistance$Sair[1],
+      TakeOffLength = max(BFL, NTO)
     )
-# }
+  return(output)
+}
