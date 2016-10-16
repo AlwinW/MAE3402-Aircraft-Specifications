@@ -15,10 +15,10 @@ input_initial <- data.frame(
   K = 0.01991,
   
   # Aerodynamic Properties
-  Clclean = 1.8,
-  Clflaps = 1.1,
-  Clhls = 1.1, 
-  ClG = 0.31801,
+  Clclean = 1.7,
+  Clflaps = 1.18,
+  Clhls = 1.18, 
+  Cl0 = 0.31801,
   Cd0clean = 0.02291,
   Cd0lg = 0.02857,
   Cd0OEI = 0.00580,
@@ -53,28 +53,37 @@ specs_decript <- data.frame(
 
 specs <- setNames(data.frame(t(specs_decript["Value"])),  t(specs_decript["Variable"]))
 
-## Desnities ======================================================================
+## Density Values ======================================================================
 specs$rhoCruise <- StandardAtomsphere(data.frame(h = specs$AltCruise))$rho
 specs$rhoCeil <- StandardAtomsphere(data.frame(h = specs$AltCeil))$rho
+specs$aCruise <- StandardAtomsphere(data.frame(h = specs$AltCruise))$a
 
 ## inp Dataframe ======================================================================
 inp = data.frame(segment = factor(
-  "NA",
-  levels = c(
-    "Takeoff",
-    "Transition",
-    "Segment 1",
-    "Segment 2",
-    "Segment 3",
-    "Segment 4",
-    "Cruise",
-    "Descend",
-    "Flare",
-    "Landing",
-    "NA"
+    "NA",
+    levels = c(
+      "Takeoff",
+      "Transition",
+      "Segment 1",
+      "Segment 2",
+      "Segment 3",
+      "Segment 4",
+      "Cruise",
+      "Descend",
+      "Flare",
+      "Landing",
+      "NA"
+    ),
+    ordered = TRUE
   ),
-  ordered = TRUE
-),
-input_initial,
-specs)
+  input_initial,
+  specs
+)
 rownames(inp) <- NULL
+# Useful Values
+inp <- inp %>%
+  mutate(
+    Vcruise = Mach * aCruise,
+    VsTO = Vmin(1.225, WS, Clclean + Clhls),
+    VsLD = Vmin(1.225, WS, Clclean + Clflaps)
+  )
