@@ -80,7 +80,7 @@ AccelerateContinue <- function(coef, AirDistance, V1, V2) {
     3 * V2 +
     AirDistance$Sair[2]
 }
-# Accelerate to V2 + 3 seconds reaction + air distance
+# Accelerate to V2 + 3 seconds reaction + air distance * Safety Factor 
 AccelerateLiftOff <- function(coef, AirDistance, V1, V2) {
   (integrate(function(x) x^2 / (coef$A[1] + coef$B[1] * x + coef$C[1] * x^3), 0, V2)[[1]] +
      3 * V2 +
