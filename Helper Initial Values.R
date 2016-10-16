@@ -14,9 +14,9 @@ input_initial <- data.frame(
   e = 0.79929,
   Kclean = 0.01991,
   
-  # 
+  # Aerodynamic Properties
   Cd0 = 0.02291,
-  Clclean = 1.7,
+  Clclean = 1.8,
   Clflaps = 1.1,
   Clhls = 1.1,
   
