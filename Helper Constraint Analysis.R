@@ -17,7 +17,7 @@ constraint <- inp %>%
          Etaprop = 0.85,
          Etatotal = 0.80,
          BatteryFactor = 1.0,
-         Cd0G = 0.18,
+         Cd0G = 0.205, # 0.18 feathered
          EtapropG = 0.7) %>%
   StandardAtomsphere(.)
 
@@ -69,7 +69,7 @@ constraint <- constraint %>%
   )
 
 ## Constraint Plot ======================================================================
-ggplot(data = constraint, aes(x = WS, group = Clhls)) +
+ConstraintPlot <- ggplot(data = constraint, aes(x = WS, group = Clhls)) +
   geom_vline(aes(xintercept = WS_App, colour = "Landing")) +
   geom_line(aes(y = PW_TOFL, colour = "Takeoff")) +
   geom_line(aes(y = PW_Ceiling_Climb, colour = "Ceiling Climb")) +
@@ -97,6 +97,10 @@ ggplot(data = constraint, aes(x = WS, group = Clhls)) +
   geom_label(data = filter(constraint, WS == varWS[3]),
              aes(x = WS, y = PW_TOFL, label = sprintf("%0.2f", Clhls), 
                colour = "Takeoff"), size = rel(3), show.legend = FALSE) + 
+  # OEI Labels
+  geom_label(data = filter(constraint, WS == varWS[2]),
+             aes(x = WS, y = PW_Seg2_Climb, label = sprintf("%0.2f", Clhls), 
+                 colour = "2nd Segment OEI"), size = rel(3), show.legend = FALSE) + 
   # Us
   geom_point(data = inp, aes(x = WS, y = P0/W, label = "Design")) +
   xlab("Wing Loading (N/m^2)") +
