@@ -4,25 +4,20 @@
 
 ## Initial Inputs ======================================================================
 input_initial <- data.frame(
-  # Configuration
   S = 24.5,
   b = 22.1359,
   AR = 20,
-  taper = 0.4,
-  
-  # Aircraft Efficiency
   e = 0.79929,
-  Kclean = 0.01991,
+  K = 0.01991,
   
-  # 
   Cd0 = 0.02291,
-  Clclean = 1.7,
-  Clflaps = 1.1,
-  Clhls = 1.1,
+  Clclean = 1.8,
+  Clflaps = 0.9169118,
+  Clhls = 0.9169118,
   
-  m = 6900,
-  W = 67664.85,
-  WS =  2761.831,
+  m = 6800,
+  W = 66684.2,
+  WS = 2721.804,
   
   P0eng = 705000,
   P0 = 1410000,
