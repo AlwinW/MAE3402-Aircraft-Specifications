@@ -11,8 +11,8 @@ Vmin <- function(rho, WS, Clmax)
   sqrt(2/rho * WS * 1/Clmax)
 
 ## Power Derating Function ======================================================================
-PA <- function(P0eng, Ne, sigma, Vinf)
-  P0eng * Ne * sigma^inputvals$alt_s
+PA <- function(Pshafteng, Ne, Vinf)
+  Pshafteng * Ne * etaprop(Vinf)
 
 ## K Effective Due to Ground Effect ======================================================================
 Keff <- function(K, h, b)
