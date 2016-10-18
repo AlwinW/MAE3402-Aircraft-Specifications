@@ -169,28 +169,36 @@ EnergyUsage <- function(TO, AirDistance, inp) {
   )[[1]]
 ## Descent Segments ======================================================================
   #--- Critical h Value
-  Desc <- mutate(inp, Cd0 = Cd0clean + 2*Cd0propfea)
+  Descinp <- mutate(inp, Cd0 = Cd0clean + 2*Cd0propfea)
   hcrit = ModifiedSecant(function(h) 
-    DescentRatesFunction(Desc$Cd0, Desc$K, Desc$W, Desc$m, Desc$S, h, Desc$Vcruise, Desc$DescAngle, accelonly = TRUE),
+    DescinpentRatesFunction(Descinp$Cd0, Descinp$K, Descinp$W, Descinp$m, Descinp$S, h, Descinp$Vcruise, Descinp$DescinpAngle, accelonly = TRUE),
     xr = 1000, del = 0.001, toler = 0.01, positive = TRUE)
   hcrit = max(hcrit, inp$AltFlaps)
-  #--- Zero Acceleration
-  timecrit = integrate(function(h)
-    DescentZeroAccel(Desc, h, inp$Vcruise, timecalc = TRUE),
-    lower = inp$AltCruise, upper = hcrit
-    )[[1]]
-  timeflap = integrate(function(h)
-    DescentRatesFunction(Desc$Cd0, Desc$K, Desc$W, Desc$m, Desc$S, h, Desc$Vcruise, Desc$DescAngle, accelonly = TRUE),
-    lower = hcrit, upper = inp$AltFlaps
-  )[[1]]
-  
+  #--- Time Required for Descinpent
   time = integrate(function(h)
-    DescentZeroAccel(Desc, h, inp$Vcruise, timecalc = TRUE),
+    DescinpentZeroAccel(Descinp, h, inp$Vcruise, timecalc = TRUE),
     lower = inp$AltCruise, upper = inp$AltFlaps
   )[[1]]
+  #--- Approximate Power Required
+  Desc = time * PA(inp$Pshafteng, 2, inp$Vcruise) * 0.05
   
-  
-  
+## Cruise ======================================================================
+  Cruiseinp <- mutate(inp, h = AltCruise) %>%
+    StandardAtomsphere(.) %>%
+    mutate(
+      Vinf = Vcruise,
+      qinf = 1/2 * rho * Vinf^2,
+      Cl = W/(qinf * S),
+      Cd0 = Cd0clean,
+      Cd = Cd0 + K * Cl^2,
+      D = qinf * S * Cd,
+      TR = D,
+      PR = TR * Vinf,
+      etaprop = etaprop(Vinf)
+      )
+  Cruise = Cruiseinp$TR / Cruiseinp$etaprop * Cruiseinp$Range * 0.9
+
+## Systems ======================================================================
   
   energysummary <- data.frame(
     TOgr = TOgr,
@@ -198,7 +206,12 @@ EnergyUsage <- function(TO, AirDistance, inp) {
     Seg1 = Seg1,
     Seg2 = Seg2,
     Seg3 = Seg3,
-    Seg4 = Seg4
+    Seg4 = Seg4,
+    Cruise = Cruise,
+    Desc = Desc
   )
+  
+  sum(energysummary/inp$E/inp$etamech)
+  
   return(energysummary)
 }
