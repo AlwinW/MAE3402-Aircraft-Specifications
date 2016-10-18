@@ -2,7 +2,7 @@
 #--- Energy Usage
 #============================
 
-ClimbEnergy <- function(inp, h, energycalc = FALSE, sinonly = FALSE) {
+ClimbEnergy <- function(inp, h, energycalc = FALSE, sinonly = FALSE, distancecalc = FALSE) {
   inph <- RepeatRows(inp, length(h))
   inph$h <- h
   inph <- StandardAtomsphere(inph) %>%
@@ -23,16 +23,19 @@ ClimbEnergy <- function(inp, h, energycalc = FALSE, sinonly = FALSE) {
       D = Cd * qinf * S,
       TR = D + W * SinTheta,
       PR = TR * Vinf,
-      P_Vv = (PR/etaprop)/ClimbRate
+      P_Vv = (PR/etaprop)/ClimbRate,
+      accel = TR/m
     )
   data.frame(inph)
   if (energycalc == TRUE)
     return(inph$P_Vv)
   else if (sinonly == TRUE)
     return(inph$SinTheta)
+  else if (distancecalc == TRUE)
+    return(inph$ClimbRate)
 }
 
-AccelerateEnergy <- function(inp, V, energycalc = FALSE) {
+AccelerateEnergy <- function(inp, V, energycalc = FALSE, distancecalc = FALSE) {
   inpv <- RepeatRows(inp, length(V))
   inpv$Vinf<- V
   inpv <- inpv %>%
@@ -46,6 +49,8 @@ AccelerateEnergy <- function(inp, V, energycalc = FALSE) {
     )
   if (energycalc == TRUE)
     return(inpv$Dv_accel)
+  if (distancecalc == TRUE)
+    return(inpv$accel)
 }
 
 DescentRatesFunction <- function(Cd0, K, W, m, S, h, V, theta, 
@@ -171,16 +176,45 @@ EnergyUsage <- function(TO, AirDistance, inp) {
   #--- Critical h Value
   Descinp <- mutate(inp, Cd0 = Cd0clean + 2*Cd0propfea)
   hcrit = ModifiedSecant(function(h) 
-    DescinpentRatesFunction(Descinp$Cd0, Descinp$K, Descinp$W, Descinp$m, Descinp$S, h, Descinp$Vcruise, Descinp$DescinpAngle, accelonly = TRUE),
+    DescentRatesFunction(Descinp$Cd0, Descinp$K, Descinp$W, Descinp$m, Descinp$S, h, Descinp$Vcruise, Descinp$DescinpAngle, accelonly = TRUE),
     xr = 1000, del = 0.001, toler = 0.01, positive = TRUE)
   hcrit = max(hcrit, inp$AltFlaps)
   #--- Time Required for Descinpent
-  time = integrate(function(h)
-    DescinpentZeroAccel(Descinp, h, inp$Vcruise, timecalc = TRUE),
+  Desctime = integrate(function(h)
+    DescentZeroAccel(Descinp, h, inp$Vcruise, timecalc = TRUE),
     lower = inp$AltCruise, upper = inp$AltFlaps
   )[[1]]
-  #--- Approximate Power Required
-  Desc = time * PA(inp$Pshafteng, 2, inp$Vcruise) * 0.05
+  #--- Approximate Power Required (5% Reserve)
+  Desc = (Desctime) * PA(inp$Pshafteng, 2, inp$Vcruise)/etaprop(inp$Vcruise) * 0.05
+  #--- Flaps
+  DescFlapsinp <- inp %>%
+    mutate(
+      h = AltFlaps,
+      Cd0 = Cd0clean + Cd0flaps + Cdiflaps,
+      Ne = 0
+    )  %>%
+    StandardAtomsphere(.)
+  DescFlapstime <- integrate(function(V)
+    1/ AccelerateEnergy(DescFlapsinp, V, distancecalc = TRUE),
+    lower =  1.3*inp$VsLD, upper = inp$Mach*DescFlapsinp$a)[[1]]
+  #--- Approximate Power Required (5% Reserve)
+  DescFlaps = (DescFlapstime) * PA(inp$Pshafteng, 2, 1.3*inp$VsLD)/etaprop(1.3*inp$VsLD) * 0.05
+  
+  
+  
+## Distances ======================================================================
+  Distances <- data.frame(
+    TOgr = integrate(function(V) V/GroundAcceleration(filter(TO, type == "All Engines"), V, distancecalc = TRUE), 
+                     lower = 0, upper = 1.1*inp$VsTO)[[1]] + 3 * 1.1*inp$VsTO,
+    TOtr = AirDistanceall$Sair,
+    Seg2 = integrate(function(h) 1.2*inp$VsTO/ClimbEnergy(Seg2inp, h, distancecalc = TRUE),
+      lower =  max(AirDistance$hTR, inp$Hobs), upper = inp$AltFlaps)[[1]],
+    Seg3 = integrate(function(V) V/AccelerateEnergy(Seg3inp, V, distancecalc = TRUE), 
+                     lower = 1.2*inp$VsTO, upper = inp$Mach*Seg3inp$a)[[1]],
+    Seg4 = integrate(function(h) inp$Mach*Seg3inp$a/ClimbEnergy(Seg4inp, h, distancecalc = TRUE),
+                     inp$AltFlaps, upper = inp$AltCruise)[[1]],
+    Descent = i was meant to use the horizontal velocities above!!
+  )
   
 ## Cruise ======================================================================
   Cruiseinp <- mutate(inp, h = AltCruise) %>%
