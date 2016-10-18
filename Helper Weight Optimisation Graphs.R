@@ -51,6 +51,7 @@ ggplot(data = weightoptimdiscrete, aes(x = WS, y = PW)) +
 # +
 #   scale_fill_manual("MTOM",values=brewer.pal(14,"YlOrRd"))
 
+library(lattice)
 MTOMlattice <- weightoptim %>%
   select(WS, PW, MTOM) %>%
   spread(PW, MTOM)
@@ -71,6 +72,20 @@ MTOMcontourplot <- ggplot(data = weightoptim, aes(x = WS, y = PW)) +
   geom_point(data = inp, aes(x = WS, y = P0/W, label = "Design")) +
   ggtitle("MTOM")
 LabelledMTOMcontourplot <- direct.label(MTOMcontourplot, method = "top.pieces")
+
+ggplot(data = weightoptim, aes(x = WS, y = PW)) + 
+  stat_contour(aes(z = MTOM, colour = ..level..), #breaks=c(c(seq(4000, 8000, 100), seq(7000, 20000, 500)))
+  geom = "polygon") +
+  geom_point(data = inp, aes(x = WS, y = P0/W, label = "Design")) +
+  ggtitle("MTOM")
+
+direct.label(
+  ggplot(data = weightoptim, aes(x = WS, y = PW)) + 
+    geom_raster(aes(fill = MTOM)) +
+    stat_contour(aes(z = MTOM, colour = ..level..)) + 
+    geom_point(data = inp, aes(x = WS, y = P0/W, label = "Design")) +
+    ggtitle("MTOM"),
+  method = "top.pieces")
 
 # Battery fraction contour plot
 # Seems to be a mimium fraction around 2000, parabola shaping curves
