@@ -51,7 +51,9 @@ ClimbRatesFunction <- function(P, Cd0, rho, V, S, K, W) {
       Thetadeg = theta * 180 / pi,  # NOTE: Thetadeg is in degrees!! theta is in radians
       SinTheta = sintheta, 
       PerGrad = tan(theta)*100, 
-      ClimbRate = sintheta * V))
+      ClimbRate = sintheta * V,
+      nload = 1/cos(theta) * sign(theta)
+      ))
   }
 }
 

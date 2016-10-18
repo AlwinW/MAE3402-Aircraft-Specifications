@@ -39,7 +39,11 @@ input_initial <- data.frame(
   etamech = 0.91238,
   
   # System Power
-  Powersys = 300000
+  Powersys = 300000,
+  
+  # Descent Angle
+  DescAngle = atan(1000/(3*5280)),
+  AltFlaps = 400 * 0.3048
 )
 
 ## Specifications ======================================================================

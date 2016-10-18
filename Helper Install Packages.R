@@ -43,6 +43,7 @@ source("Helper Numerical Methods.R")
 source("Helper Dataframes.R")
 source("Helper Aerodynamic Functions.R")
 source("Helper Initial Values.R")
+source("Helper Main Calculation Functions.R")
 # source("Helper Calculation Functions.R")
 
 # theme_set(theme_linedraw())
