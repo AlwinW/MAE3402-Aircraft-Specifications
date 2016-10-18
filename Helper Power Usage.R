@@ -213,7 +213,7 @@ EnergyUsage <- function(TO, AirDistance, inp) {
                      lower = 1.2*inp$VsTO, upper = inp$Mach*Seg3inp$a)[[1]],
     Seg4 = integrate(function(h) inp$Mach*Seg3inp$a/ClimbEnergy(Seg4inp, h, distancecalc = TRUE),
                      inp$AltFlaps, upper = inp$AltCruise)[[1]],
-    Descent = i was meant to use the horizontal velocities above!!
+    Descent = 1 #i was meant to use the horizontal velocities above!!
   )
   
 ## Cruise ======================================================================
