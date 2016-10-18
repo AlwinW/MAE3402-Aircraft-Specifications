@@ -18,8 +18,8 @@ AR = 20
 
 
 # Grid of data values
-varWS <- seq(1500,5500, length.out = 21)
-varPW <- seq(0, 30, length.out = 21)
+varWS <- seq(1500,3500, length.out = 11)
+varPW <- seq(0, 30, length.out = 11)
 weightoptim <- expand.grid(WS = varWS, PW = varPW)
 
 weightoptim <- weightoptim %>%
@@ -51,6 +51,13 @@ ggplot(data = weightoptimdiscrete, aes(x = WS, y = PW)) +
 # +
 #   scale_fill_manual("MTOM",values=brewer.pal(14,"YlOrRd"))
 
+MTOMlattice <- weightoptim %>%
+  select(WS, PW, MTOM) %>%
+  spread(PW, MTOM)
+rownames(MTOMlattice) <- MTOMlattice$WS
+MTOMlattice <- select(MTOMlattice, -WS)
+asdf <- as.matrix(MTOMlattice)
+filled.contour(varWS,varPW,asdf,nlevels=9,col=brewer.pal(9,"YlOrRd"))
 
 # 
 # points <- ggplot(data = weightoptim, aes(x = WS, y = PW)) +
