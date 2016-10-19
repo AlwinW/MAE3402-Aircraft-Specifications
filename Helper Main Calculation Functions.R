@@ -69,7 +69,7 @@ TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO) {
       Cl = Cl0 + Clflaps
     )
   #--- Determine the AirDistance in each case
-  AirDistance <- TO %>%
+  AirDistanceTO <- TO %>%
     filter(type %in% c("All Engines", "One Engine Down")) %>%
     mutate(ClTR = Clclean + Clflaps, 
            VTR = VsTO * 1.15,
@@ -90,7 +90,7 @@ TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO) {
       Sair = ifelse(SC >0, ST + SC, sqrt(R^2 - (R-hTR)^2))
     )%>%
     ungroup()
-  AirDistance <- data.frame(select(AirDistance, type, R, gamma, hTR, ST, SC, Sair))
+  AirDistanceTO <- data.frame(select(AirDistanceTO, type, R, gamma, hTR, ST, SC, Sair))
   #--- Calculate the other TO parameters and find V1
   TO <- TO %>%
     mutate(
@@ -98,12 +98,12 @@ TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO) {
       Cd = Cd0 + K * Cl^2
   )
   #--- Test if the graphs will cross over before V2
-  BFL <- try(ModifiedSecant(function(V1) AccelerateContinue(TO, AirDistance, V1, V2) - AccelerateStop(TO, V1), 
+  BFL <- try(ModifiedSecant(function(V1) AccelerateContinue(TO, AirDistanceTO, V1, V2) - AccelerateStop(TO, V1), 
                              V2, 0.01, 1e-4, positive = TRUE), silent = TRUE)
   if (is.numeric(BFL)){
-    V1 = ModifiedSecant(function(V1) AccelerateContinue(TO, AirDistance, V1, V2) - AccelerateStop(TO, V1), 
+    V1 = ModifiedSecant(function(V1) AccelerateContinue(TO, AirDistanceTO, V1, V2) - AccelerateStop(TO, V1), 
                    V2, 0.01, 1e-4, positive = TRUE)
-    BFL = AccelerateContinue(TO, AirDistance, V1, V2)
+    BFL = AccelerateContinue(TO, AirDistanceTO, V1, V2)
   } else {
     V1 = NA
     BFL = 0
@@ -113,15 +113,17 @@ TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO) {
     V1 = V1,
     V2 = V2,
     BFL = BFL,
-    NTO = AccelerateLiftOff(TO, AirDistance, V2)
+    NTO = AccelerateLiftOff(TO, AirDistanceTO, V2)
   ) %>%
     mutate(
-      NTOgr = NTO - AirDistance$Sair[1],
+      NTOgr = NTO/1.15 - AirDistanceTO$Sair[1],
+      NTOair = AirDistanceTO$Sair[1],
       TakeOffLength = max(BFL*as.numeric(V1 <= V2), NTO)
     )
   return(TOoutput)
   # Need to output all the dataframes!
 }
+
 #--- Plot of the takeoff curves
 TakeOffLengthPlot<- function(TO, AirDistance, TOoutput, inp) {
   TOplotdata <- data.frame(
@@ -266,3 +268,66 @@ ggplot(Climboutput, aes(x=Vinf, y=nload, group = type, colour = type)) +
 
 
 ## Landing ======================================================================
+LandingLength <- function(inp, V2 = 1.1 * inp$VsLD) {
+  #--- Determine the distance required for landing
+  AirDistLD <- inp
+  AirDistLD$type <- "All Engines"
+  AirDistLD$Ne <- 2
+  AirDistLD <- AirDistLD %>%
+    mutate(h = Hobsland) %>%
+    StandardAtomsphere(.) %>%
+    mutate(
+      Clapp = Clclean + Clhls,
+      Cd0 = Cd0clean + Cd0lg + Cd0flaps + Cdiflaps,
+      Vapp = 1.3* VsLD,
+      qinf = 1/2 * rho * Vapp^2,
+      etaprop = etaprop(Vapp),
+      PA = PA(Pshafteng, Ne, Vapp) * 0.05,
+      gammadeg = max(-3, ClimbRatesFunction(PA, Cd0, rho, Vapp, S, K, W)[[1]]),
+      gamma = gammadeg * pi/180,
+      L = W * cos(gamma),
+      Cl = L / (qinf * S),
+      Cd = Cd0 + K * Cl^2,
+      D = qinf * S * Cd,
+      TR = D - W * sin(gamma),
+      PR = TR * Vapp / etaprop,
+      R = Vapp^2 / (0.2 * g),
+      SF = R * sin(gamma),
+      hF = R * (1 - cos(gamma)),
+      SA = (Hobsland - hF) / tan(gamma),
+      Sair = ifelse(SA >0, SA + SF, sqrt(R^2 - (R-Hobsland)^2)))
+  #--- Set up the initial parameters to solve for
+  LD <- inp
+  LD$segment <- "Landing"
+  LD$type <- "Landing"
+  LD$Ne <-0
+  LD$mu <- c(
+    as.double(groundmu["Dry Concrete", "brakeson"])
+  )
+  #---- Determine aerodynamic parameters
+  LD <- mutate(LD, h = 0) %>%
+    StandardAtomsphere(.) %>%
+    mutate(
+      K = Keff(K, hground, b),
+      Cd0 = Cd0clean + Cd0lg + Cd0flaps + Cdiflaps,
+      Cd0 = Cd0 + as.numeric(Ne == 1) * Cd0propfea + as.numeric(Ne == 0) * 2 * Cd0propunfea,
+      Cl = Cl0 + Clflaps,
+      Cd = Cd0 + K * Cl^2
+    )
+  #--- Output the results
+  LDoutput <- data.frame(
+    Vapp = AirDistLD$Vapp,
+    VTD = 1.15*inp$VsLD
+  ) %>%
+    mutate(
+      LD = (VTD * 3 + 
+        integrate(function(V) V/GroundAcceleration(LD, V, distancecalc = TRUE),
+                   lower = 1.15*inp$VsLD, upper = 0)[[1]] +
+          AirDistLD$Sair[1]) * 1.67,
+      LDgr = LD/1.67 - AirDistLD$Sair[1],
+      LDair = AirDistLD$Sair[1]
+    )
+  return(LDoutput)
+  # Need to output all the dataframes!
+}
+

@@ -210,6 +210,8 @@ EnergyUsage <- function(TO, AirDistance, inp) {
   #--- Approximate Power Required (5% Reserve)
   DescFlaps = (DescFlapstime) * PA(inp$Pshafteng, 2, 1.3*inp$VsLD)/etaprop(1.3*inp$VsLD) * 0.05
   
+## Landing ======================================================================
+  
 ## Distances ======================================================================
   Distances <- data.frame(
     TOgr = integrate(function(V) V/GroundAcceleration(filter(TO, type == "All Engines"), V, distancecalc = TRUE), 

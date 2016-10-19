@@ -43,7 +43,8 @@ input_initial <- data.frame(
   
   # Descent Angle
   DescAngle = atan(1000/(3*5280)),
-  AltFlaps = 400 * 0.3048
+  AltFlaps = 400 * 0.3048,
+  Hobsland = 50 * 0.3048
 )
 
 ## Specifications ======================================================================
