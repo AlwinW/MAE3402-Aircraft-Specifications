@@ -16,13 +16,16 @@
 #   "ggplot2",
 #   "RColorBrewer",
 #   "reshape2",
-#   "directlabels"
+#   "directlabels",
+#   "lattice",
+#   "poltly"
 # ))
 
 ## Load Packages ======================================================================
 LoadPackages <- function() {
   library(shiny,shinyAce)
   library(rsconnect)
+  library(plotly)
   library(MASS)
   library(lazyeval)
   library(tidyr)

@@ -57,3 +57,30 @@ filled.contour(varWS, varPW, asdf, nlevels=9, col=brewer.pal(9,"YlOrRd"),
                  );
                  points(2000, 10);
                  }) 
+
+
+## 3D Plots ======================================================================
+varWS <- seq(1500,3500, length.out = 11)
+varPW <- seq(0, 30, length.out = 11)
+varAR <- seq(15, 45, length.out = 7)
+weightoptim3D <- expand.grid(WS = varWS, PW = varPW)
+weightoptim3D <- RepeatRows(weightoptim3D, varAR)
+weightoptim3D$AR <- varAR
+
+weightoptim3D <- weightoptim3D %>%
+  rowwise() %>%
+  do(data.frame(
+    # Previous WS and PW values
+    .,
+    # Determine MTOM
+    MTOM = ModifiedSecant(
+      function(W_dg_SI)
+        W_dg_SI - Weight_Estimate(.$WS, .$PW, W_dg_SI, AR =.$AR, composite = TRUE, iteration = TRUE),
+      6000, 0.001,0.01, positive = TRUE
+    )
+  ))
+weightoptim3D <- data.frame(weightoptim3D)
+
+plot_ly(data = weightoptim3D, x = ~WS, y = ~PW, z = ~AR, color = ~MTOM, alpha = 0.3)
+
+

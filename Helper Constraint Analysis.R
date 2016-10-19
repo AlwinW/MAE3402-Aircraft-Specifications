@@ -12,13 +12,13 @@ varClhls = seq(0.9,1.3, by = 0.1)
 varWbW0_Max = seq(0.525,0.65, by = 0.025)
 
 constraint <- inp %>%
-  select(-S, -b, -m, -W, -P0eng, -P0) %>%
+  select(-S, -b, -m, -W) %>%
   mutate(h = AltCruise,
-         Etaprop = 0.85,
-         Etatotal = 0.80,
-         BatteryFactor = 1.0,
-         Cd0G = 0.205, # 0.18 feathered
-         EtapropG = 0.7) %>%
+         Etaprop = etaprop(inp$Vcruise),
+         Etatotal = inp$etamech*Etaprop,
+         BatteryFactor = 1.03,
+         Cd0G = 0.18, # feathered, 0.205 unfeathered
+         EtapropG = etaprop(1.2 * inp$VsTO)) %>%
   StandardAtomsphere(.)
 
 constraint <-  RepeatRows(constraint, length(varClhls))
@@ -102,7 +102,7 @@ ConstraintPlot <- ggplot(data = constraint, aes(x = WS, group = Clhls)) +
              aes(x = WS, y = PW_Seg2_Climb, label = sprintf("%0.2f", Clhls), 
                  colour = "2nd Segment OEI"), size = rel(3), show.legend = FALSE) + 
   # Us
-  geom_point(data = inp, aes(x = WS, y = P0/W, label = "Design")) +
+  geom_point(data = inp, aes(x = WS, y = Pshaft/W/etamech, label = "Design")) +
   xlab("Wing Loading (N/m^2)") +
   ylab("Power Loading (W/N)") +
   ggtitle("Constraint Analysis") +

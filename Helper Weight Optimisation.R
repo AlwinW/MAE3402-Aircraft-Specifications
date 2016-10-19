@@ -139,6 +139,3 @@ WS = inp$WS
 PW = inp$Pshaft/inp$W
 W_dg_SI = ModifiedSecant(function(W_dg_SI) W_dg_SI - Weight_Estimate(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE), 
                          6000, 0.001, 0.01, positive = TRUE)
-
-Weight_Estimate(WS, PW, W_dg_SI, composite = TRUE, iteration = FALSE,
-                AR = 20, BatteryFactor = 1.03)
