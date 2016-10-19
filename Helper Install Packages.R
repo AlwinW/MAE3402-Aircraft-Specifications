@@ -33,6 +33,7 @@ LoadPackages <- function() {
   library(RColorBrewer)
   library(reshape2)
   library(directlabels)
+  library(lattice) 
 }
 
 suppressWarnings(suppressMessages(LoadPackages()))
