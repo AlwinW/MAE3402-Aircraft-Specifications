@@ -125,7 +125,7 @@ TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO) {
 }
 
 #--- Plot of the takeoff curves
-TakeOffLengthPlot<- function(TO, AirDistance, TOoutput, inp) {
+TakeOffLengthPlot<- function(TO, AirDistanceTO, TOoutput, inp) {
   TOplotdata <- data.frame(
     V1 = seq(0.00001, max(TOoutput$V1, TOoutput$V2)*1.02, len = 20),
     V2 = TOoutput$V2) %>%
@@ -133,7 +133,7 @@ TakeOffLengthPlot<- function(TO, AirDistance, TOoutput, inp) {
     do(data.frame(
       .,
       AccelerateStop = AccelerateStop(TO, .$V1),
-      AccelerateContinue = AccelerateContinue(TO, AirDistance, .$V1, .$V2)
+      AccelerateContinue = AccelerateContinue(TO, AirDistanceTO, .$V1, .$V2)
       ))
   TOplotout <- ggplot(data = TOplotdata, aes(x = V1)) +
     geom_hline(yintercept = inp$Srun, aes(colour = "Max Paved Runway")) + 
@@ -270,10 +270,10 @@ ggplot(Climboutput, aes(x=Vinf, y=nload, group = type, colour = type)) +
 ## Landing ======================================================================
 LandingLength <- function(inp, V2 = 1.1 * inp$VsLD) {
   #--- Determine the distance required for landing
-  AirDistLD <- inp
-  AirDistLD$type <- "All Engines"
-  AirDistLD$Ne <- 2
-  AirDistLD <- AirDistLD %>%
+  AirDistanceLD <- inp
+  AirDistanceLD$type <- "All Engines"
+  AirDistanceLD$Ne <- 2
+  AirDistanceLD <- AirDistanceLD %>%
     mutate(h = Hobsland) %>%
     StandardAtomsphere(.) %>%
     mutate(
@@ -316,16 +316,16 @@ LandingLength <- function(inp, V2 = 1.1 * inp$VsLD) {
     )
   #--- Output the results
   LDoutput <- data.frame(
-    Vapp = AirDistLD$Vapp,
+    Vapp = AirDistanceLD$Vapp,
     VTD = 1.15*inp$VsLD
   ) %>%
     mutate(
       LD = (VTD * 3 + 
         integrate(function(V) V/GroundAcceleration(LD, V, distancecalc = TRUE),
                    lower = 1.15*inp$VsLD, upper = 0)[[1]] +
-          AirDistLD$Sair[1]) * 1.67,
-      LDgr = LD/1.67 - AirDistLD$Sair[1],
-      LDair = AirDistLD$Sair[1]
+          AirDistanceLD$Sair[1]) * 1.67,
+      LDgr = LD/1.67 - AirDistanceLD$Sair[1],
+      LDair = AirDistanceLD$Sair[1]
     )
   return(LDoutput)
   # Need to output all the dataframes!
