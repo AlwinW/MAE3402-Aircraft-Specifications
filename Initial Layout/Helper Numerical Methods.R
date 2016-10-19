@@ -45,3 +45,6 @@ ModifiedSecant <- function(func, xr, del, toler, positive = FALSE) {
   }
   return(xr)
 }
+
+fx <- function(x) x^2 - x - 7
+

@@ -4,34 +4,51 @@
 
 ## Initial Inputs ======================================================================
 input_initial <- data.frame(
+  # Configuration
   S = 24.5,
   b = 22.1359,
   AR = 20,
+  Taper = 0.4,
+  
+  # Aircraft Efficiency
   e = 0.79929,
   K = 0.01991,
   
-  Cd0 = 0.02291,
-  Clclean = 1.8,
-  Clflaps = 0.9169118,
-  Clhls = 0.9169118,
+  # Aerodynamic Properties
+  Clclean = 1.7,
+  Clflaps = 1.18,
+  Clhls = 1.18, 
+  Cl0 = 0.31801,
+  Cd0clean = 0.02291,
+  Cd0lg = 0.02857,
+  Cd0OEI = 0.00580,
+  Cd0flaps = 0.03885,
+  Cdiflaps = 0.09486,
+  Cd0propfea = 0.00580,
+  Cd0propunfea = 0.04636,
+  hground = 2.5,
   
+  # Weights
   m = 6900,
   W = 67664.85,
-  WS = 2761.831,
+  WS =  2761.831,
   
-  P0eng = 705000,
-  P0 = 1410000,
+  # Shaft Power per Engin
+  Pshafteng = 668100,
+  Pshaft = 1336200,
+  etamech = 0.91238,
   
-  ClG = 0.25,
-  Cd0G = 0.034365,
-  hground = 2.5
+  # System Power
+  Powersys = 300000,
+  
+  # Descent Angle
+  DescAngle = atan(1000/(3*5280)),
+  AltFlaps = 400 * 0.3048,
+  Hobsland = 50 * 0.3048
 )
 
-resolution = 10
-inputvals <- input_initial
-
 ## Specifications ======================================================================
-specifications_description <- data.frame(
+specs_decript <- data.frame(
   Variable = c("Mp", "Wp", "E", "Dens", "Srun", "Hobs", "Vappmax", "PerGrad2Seg", "ClimbCruise", "ClimbCeil", "AltCruise", "AltCeil", 
                "Mach", "Range", "LoadMax", "LoadMin"),
   Description = c("Payload Mass (kg)","Payload Weight (N)","Battery Specific Energy (J/kg)","Battery Density (kg/m^3)",
@@ -42,6 +59,39 @@ specifications_description <- data.frame(
             100 * 0.3048 / 60, 10000 * 0.3048, 12000 * 0.3048, 0.25, 1000e3, 3.5, -1.5)
 )
 
-specifications  <- t(specifications_description["Value"])
-colnames(specifications) <- t(specifications_description["Variable"])
+specs <- setNames(data.frame(t(specs_decript["Value"])),  t(specs_decript["Variable"]))
 
+## Density Values ======================================================================
+specs$rhoCruise <- StandardAtomsphere(data.frame(h = specs$AltCruise))$rho
+specs$rhoCeil <- StandardAtomsphere(data.frame(h = specs$AltCeil))$rho
+specs$aCruise <- StandardAtomsphere(data.frame(h = specs$AltCruise))$a
+
+## inp Dataframe ======================================================================
+inp = data.frame(segment = factor(
+    "NA",
+    levels = c(
+      "Takeoff",
+      "Transition",
+      "Segment 1",
+      "Segment 2",
+      "Segment 3",
+      "Segment 4",
+      "Cruise",
+      "Descend",
+      "Flare",
+      "Landing",
+      "NA"
+    ),
+    ordered = TRUE
+  ),
+  input_initial,
+  specs
+)
+rownames(inp) <- NULL
+# Useful Values
+inp <- inp %>%
+  mutate(
+    Vcruise = Mach * aCruise,
+    VsTO = Vmin(1.225, WS, Clclean + Clhls),
+    VsLD = Vmin(1.225, WS, Clclean + Clflaps)
+  )
