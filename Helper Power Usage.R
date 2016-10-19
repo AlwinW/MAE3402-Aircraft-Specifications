@@ -24,7 +24,9 @@ ClimbEnergy <- function(inp, h, energycalc = FALSE, sinonly = FALSE, distancecal
       TR = D + W * SinTheta,
       PR = TR * Vinf,
       P_Vv = (PR/etaprop)/ClimbRate,
-      accel = TR/m
+      accel = TR/m,
+      Vh = Vinf*cos(Thetadeg * pi/180),
+      distcalc = Vh/ClimbRate
     )
   data.frame(inph)
   if (energycalc == TRUE)
@@ -32,7 +34,7 @@ ClimbEnergy <- function(inp, h, energycalc = FALSE, sinonly = FALSE, distancecal
   else if (sinonly == TRUE)
     return(inph$SinTheta)
   else if (distancecalc == TRUE)
-    return(inph$ClimbRate)
+    return(inph$distcalc)
 }
 
 AccelerateEnergy <- function(inp, V, energycalc = FALSE, distancecalc = FALSE) {
@@ -54,6 +56,7 @@ AccelerateEnergy <- function(inp, V, energycalc = FALSE, distancecalc = FALSE) {
 }
 
 DescentRatesFunction <- function(Cd0, K, W, m, S, h, V, theta, 
+                                 distancecalc = FALSE,
                                  accelonly = FALSE, all = FALSE, Vvonly = FALSE) {
   rho = StandardAtomsphere(data.frame(h=h))$rho
   qinf = 1/2 * rho * V^2
@@ -65,11 +68,14 @@ DescentRatesFunction <- function(Cd0, K, W, m, S, h, V, theta,
   Vh = V*cos(theta)
   accelv = -accel*sin(theta)
   accelh = accel*cos(theta)
-  if (accelonly == TRUE)
+  distcalc = Vh/Vv
+  if (distancecalc == TRUE)
+    return(distcalc)
+  else if (accelonly == TRUE)
     return(accel)
-  if (Vvonly == TRUE)
+  else if (Vvonly == TRUE)
     return(Vv)
-  if (all == TRUE)
+  else if (all == TRUE)
     return(data.frame(
       rho = rho,
       Cl = Cl,
@@ -83,7 +89,7 @@ DescentRatesFunction <- function(Cd0, K, W, m, S, h, V, theta,
     ))
 }
 
-DescentZeroAccel <- function(inp, h, V, timecalc = FALSE, all = TRUE) {
+DescentZeroAccel <- function(inp, h, V, timecalc = FALSE, distancecalc = FALSE, all = FALSE) {
   Desc <- RepeatRows(inp, length(h))
   Desc$h <- h
   Desc$V <- V
@@ -101,10 +107,14 @@ DescentZeroAccel <- function(inp, h, V, timecalc = FALSE, all = TRUE) {
       .,
       DescentRatesFunction(.$Cd0, .$K, .$W, .$m, .$S, .$h, .$V, .$theta, all = TRUE)
     )) %>%
-    mutate(accel = 0)
+    mutate(accel = 0,
+           Vh = V*cos(theta * pi/180),
+           distcalc = Vh/Vv)
   Desc <- data.frame(Desc)
   if (timecalc == TRUE)
     return(1/Desc$Vv)
+  else if (distancecalc == TRUE)
+    return(Desc$distcalc)
   else if (all == TRUE)
   return(Desc)
 }
@@ -200,20 +210,22 @@ EnergyUsage <- function(TO, AirDistance, inp) {
   #--- Approximate Power Required (5% Reserve)
   DescFlaps = (DescFlapstime) * PA(inp$Pshafteng, 2, 1.3*inp$VsLD)/etaprop(1.3*inp$VsLD) * 0.05
   
-  
-  
 ## Distances ======================================================================
   Distances <- data.frame(
     TOgr = integrate(function(V) V/GroundAcceleration(filter(TO, type == "All Engines"), V, distancecalc = TRUE), 
                      lower = 0, upper = 1.1*inp$VsTO)[[1]] + 3 * 1.1*inp$VsTO,
     TOtr = AirDistanceall$Sair,
-    Seg2 = integrate(function(h) 1.2*inp$VsTO/ClimbEnergy(Seg2inp, h, distancecalc = TRUE),
+    Seg2 = integrate(function(h) ClimbEnergy(Seg2inp, h, distancecalc = TRUE),
       lower =  max(AirDistance$hTR, inp$Hobs), upper = inp$AltFlaps)[[1]],
     Seg3 = integrate(function(V) V/AccelerateEnergy(Seg3inp, V, distancecalc = TRUE), 
                      lower = 1.2*inp$VsTO, upper = inp$Mach*Seg3inp$a)[[1]],
-    Seg4 = integrate(function(h) inp$Mach*Seg3inp$a/ClimbEnergy(Seg4inp, h, distancecalc = TRUE),
+    Seg4 = integrate(function(h) ClimbEnergy(Seg4inp, h, distancecalc = TRUE),
                      inp$AltFlaps, upper = inp$AltCruise)[[1]],
-    Descent = 1 #i was meant to use the horizontal velocities above!!
+    Desc= integrate(function(h) ClimbEnergy(Seg4inp, h, distancecalc = TRUE),
+                        inp$AltFlaps, upper = inp$AltCruise)[[1]],
+    DescFlaps = integrate(function(V)
+      V/AccelerateEnergy(DescFlapsinp, V, distancecalc = TRUE),
+      lower =  1.3*inp$VsLD, upper = inp$Mach*DescFlapsinp$a)[[1]]
   )
   
 ## Cruise ======================================================================
