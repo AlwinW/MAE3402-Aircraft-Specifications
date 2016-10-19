@@ -243,8 +243,8 @@ EnergyUsage <- function(TO, AirDistanceTO, LD, AirDistanceLD, inp, reserve = 0.0
     
     Desc1 = integrate(function(h) DescentZeroAccel(Desc1inp, h, inp$Vcruise, distancecalc = TRUE),
                      lower = inp$AltCruise, upper = inp$AltFlaps)[[1]],
-    Desc2 = integrate(function(V) V/AccelerateEnergy(DescFlapsinp, V, distancecalc = TRUE),
-                     lower =  1.3*inp$VsLD, upper = inp$Mach*DescFlapsinp$a)[[1]],
+    Desc2 = integrate(function(V) V/AccelerateEnergy(Desc2inp, V, distancecalc = TRUE),
+                     lower =  1.3*inp$VsLD, upper = inp$Mach*Desc2inp$a)[[1]],
     Desc3 = integrate(function(h) DescentZeroAccel(Desc3inp, h, 1.3*inp$VsLD, distancecalc = TRUE),
                       lower = inp$AltFlaps, upper = inp$Hobsland)[[1]],
     
