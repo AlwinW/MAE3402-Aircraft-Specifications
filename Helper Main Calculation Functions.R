@@ -49,7 +49,7 @@ AccelerateLiftOff <- function(TO, AirDistance, V2) {
 }
 
 ## Takeoff ======================================================================
-TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO) {
+TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO, all = FALSE) {
   #--- Set up the initial parameters to solve for
   TO <- RepeatRows(inp, 3)
   TO$segment <- "Takeoff"
@@ -120,7 +120,16 @@ TakeOffLength <- function(inp, V2 = 1.1 * inp$VsTO) {
       NTOair = AirDistanceTO$Sair[1],
       TakeOffLength = max(BFL*as.numeric(V1 <= V2), NTO)
     )
-  return(TOoutput)
+  
+  if (all == TRUE)
+    return(list(
+      TO = TO,
+      AirDistanceTO = AirDistanceTO,
+      BFL = BFL,
+      TOoutput = TOoutput
+    ))
+  else
+    return(TOoutput)
   # Need to output all the dataframes!
 }
 
@@ -268,7 +277,7 @@ ggplot(Climboutput, aes(x=Vinf, y=nload, group = type, colour = type)) +
 
 
 ## Landing ======================================================================
-LandingLength <- function(inp, V2 = 1.1 * inp$VsLD) {
+LandingLength <- function(inp, V2 = 1.1 * inp$VsLD, all = TRUE) {
   #--- Determine the distance required for landing
   AirDistanceLD <- inp
   AirDistanceLD$type <- "All Engines"
@@ -327,7 +336,14 @@ LandingLength <- function(inp, V2 = 1.1 * inp$VsLD) {
       LDgr = LD/1.67 - AirDistanceLD$Sair[1],
       LDair = AirDistanceLD$Sair[1]
     )
-  return(LDoutput)
+  if (all == TRUE) 
+    return(list(
+      LD = LD,
+      AirDistanceLD = AirDistanceLD,
+      LDoutput = LDoutput
+    ))
+  else 
+    return(LDoutput)
   # Need to output all the dataframes!
 }
 
