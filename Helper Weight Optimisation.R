@@ -12,7 +12,7 @@ Fudge_Factors = c(0.85, 0.83, 0.83, 0.90, 0.95, 0.95, 1, 1, 1, 1, 1, 1, 1, 1)
 
 ## Determine the Weight Estimate ======================================================================
 Weight_Estimate <- function(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE,
-                            AR = 20, BatteryFactor = 1.05) {
+                            AR = 20, BatteryFactor = 1.05, L_fusein = 12) {
   #--- Constants
   # Constant parameters for the aircraft
   # AR = 20
@@ -22,7 +22,7 @@ Weight_Estimate <- function(WS, PW, W_dg_SI, composite = TRUE, iteration = TRUE,
   e = 0.7993
   K_h = 0.11    # see pp461 includes hydraulics for flap
   lambda = 0.4
-  L_Fuse = 12/ft_to_m  # ft, fuselage length
+  L_Fuse = L_fusein/ft_to_m  # ft, fuselage length
   L_m = 0.7574/ft_to_m   # ft, length of main landing gear 
   L_n = 0.7574/ft_to_m   # ft, length of nose landing gear
   N_z = 3.5           # Ultimate load factor

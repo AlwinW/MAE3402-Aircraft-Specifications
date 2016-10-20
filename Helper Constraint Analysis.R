@@ -17,7 +17,7 @@ constraint <- inp %>%
          Etaprop = etaprop(inp$Vcruise),
          Etatotal = inp$etamech*Etaprop,
          BatteryFactor = 1.03,
-         Cd0G = 0.18, # feathered, 0.205 unfeathered
+         Cd0G = inp$Cd0clean + inp$Cd0lg + inp$Cd0flaps + inp$Cdiflaps + inp$Cd0propfea, # feathered, 0.205 unfeathered
          EtapropG = etaprop(1.2 * inp$VsTO)) %>%
   StandardAtomsphere(.)
 
@@ -43,7 +43,7 @@ constraint <- constraint %>%
     TOa = WS^2 * (0.255/ClTO^2),
     TOb = (11.8/ClTO) * WS,
     TOc = - Srun,
-    PW_TOFL = 2*TOa/(-TOb + sqrt(TOb^2 - 4*TOa*TOc)),
+    PW_TOFL = 2*TOa/(-TOb + sqrt(TOb^2 - 4*TOa*TOc))   * 0.95, # INTEGRAL METHOD BETTER
 ## Cruise Speed ======================================================================
     Clcruise = WS / qinf,
     PW_Cruise = (Vcruise/Etaprop) * (Cd0/Clcruise + K*Clcruise),
