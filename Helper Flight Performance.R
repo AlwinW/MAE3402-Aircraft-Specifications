@@ -5,9 +5,9 @@
 # distance, speed, drag, acceleration, powerout, eta, shaftpower, thrust, lift, drag, Cd0, lift/drag, theta,
 # facet 3; start, middle, end; use freex for good view
 
-# Segment | Vinf | Distance | accel | theta_deg | Cl | Cd0 | Cd | L | D | L_D | etaprop | etatotal | PR | PshaftR | TR
+# Segment | Vinf | Distance | Height | accel | theta_deg | Cl | Cd0 | Cd | L | D | L_D | etaprop | etatotal | PR | PshaftR | TR
 
-selectnames = c("segment", "Vinf", "Distance", "accel", "theta_deg", "Cl", "Cd0", "L", "D", "L_D", "etaprop", "etatotal", "PR", "PshaftR", "TR")
+selectnames = c("segment", "Vinf", "Distance", "Height", "accel", "theta_deg", "Cl", "Cd0", "L", "D", "L_D", "etaprop", "etatotal", "PR", "PshaftR", "TR")
 
 takeoffdata <- TakeOffLength(inp, all = TRUE)
 landingdata <- LandingLength(inp, all = TRUE)
@@ -34,6 +34,7 @@ TOgr <- TOgr %>%
     GroundAcceleration(TOall, .$varV, all = TRUE)
   )) %>%
   mutate(Vinf = velval,
+         Height = 0,
          theta_deg = 0,
          qinf = 1/2*rho*Vinf^2,
          L = qinf * S * Cl,
@@ -60,6 +61,7 @@ TOtr$gamma <- AirDistanceall$gamma
 TOtr <- StandardAtomsphere(TOtr) %>%
   mutate(
     segment = "Takeoff",
+    Height = h,
     Vinf = 1.15 * VsTO,
     qinf = 1/2 * rho * Vinf^2,
     Cd0 = Cd0clean + Cd0flaps + Cdiflaps,
@@ -77,5 +79,13 @@ TOtr <- StandardAtomsphere(TOtr) %>%
     PshaftR = PR/etaprop,
     TR = PR/Vinf
   )
+TOtr <- data.frame(TOtr[selectnames])
+
 
 ## Segments ======================================================================
+varh <- seq(AirDistanceall$hTR, inp$AltFlaps,length.out = 11)
+Seg2 <- RepeatRows(inp, varh)
+Seg2$h <- varh
+Seg2$gamma <- AirDistanceall$gamma
+Segment2 <- 
+

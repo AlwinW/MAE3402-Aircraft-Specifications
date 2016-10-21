@@ -26,6 +26,8 @@ weightoptim <- weightoptim %>%
   ))
 weightoptim <- data.frame(weightoptim)
 
+
+## MTOM contour
 MTOMlattice <- weightoptim %>% 
   mutate(MTOM = ifelse(MTOM > 12000, 12000, MTOM)) %>%
   select(WS, PW, MTOM) %>% 
@@ -42,22 +44,62 @@ filled.contour(varWS, varPW, asdf, nlevels = 8, col=brewer.pal(9,"YlOrRd"),
                  axis(1); axis(2);
                  contour(varWS, varPW, asdf, 
                      drawlabels = TRUE, add = TRUE);
-                 points(2000, 10);
                  polygon(x = c(xaxis$WS, 3500, 3500, 0), y = c(xaxis$PW, 30, 0, 0), 
                          density = 3, col = "grey40");
                  lines(x = xaxis$WS, y = xaxis$PW, lwd = 2);
+                 points(x = inp$WS, y = inp$Pshaft/inp$W/inp$etamech, pch = 16, cex = 2)
                  })
 
-filled.contour(varWS, varPW, asdf, nlevels=9, col=brewer.pal(9,"YlOrRd"),
-               plot.axes = {axis(1); axis(2);
-                 contour(x=varWS,y=varPW,z=asdf,nlevels=9,labcex=1.5,
-                         col=pt.color,lwd=1.5,add=TRUE, labels="      ", method="flattest"
-                 );
-                 contour(x=varWS,y=varPW,z=asdf,nlevels=9,lwd=1.5,labcex=1.5,
-                         lty=0,col=pt.color,add=TRUE, method="flattest"
-                 );
-                 points(2000, 10);
-                 }) 
+## Saving_Total contour
+Saving_Totallattice <- weightoptim %>% 
+  mutate(Saving_Total = ifelse(Saving_Total > 500, 500, Saving_Total)) %>%
+  select(WS, PW, Saving_Total) %>% 
+  spread(PW, Saving_Total) 
+rownames(Saving_Totallattice) <- Saving_Totallattice$WS 
+Saving_Totallattice <- select(Saving_Totallattice, -WS) 
+asdf <- as.matrix(Saving_Totallattice) 
+
+filled.contour(varWS, varPW, asdf, nlevels = 8, col=brewer.pal(9,"YlOrRd"),
+               xlab="Wing Loading (WS)",ylab="Power Loading (PW)",
+               main = "Mass Saving due to Composites (Raymer Correlation)",
+               # plot.title = "Saving_Total",
+               plot.axes = {
+                 axis(1); axis(2);
+                 contour(varWS, varPW, asdf, 
+                         drawlabels = TRUE, add = TRUE);
+                 polygon(x = c(xaxis$WS, 3500, 3500, 0), y = c(xaxis$PW, 30, 0, 0), 
+                         density = 3, col = "grey40");
+                 lines(x = xaxis$WS, y = xaxis$PW, lwd = 2);
+                 points(x = inp$WS, y = inp$Pshaft/inp$W/inp$etamech, pch = 16, cex = 2)
+               })
+
+## Croot contour
+Crootlattice <- weightoptim %>% 
+  mutate(
+    AR = 20,
+    b = sqrt(S * AR),
+    Croot = 2*S_wing / ((1 + 0.4) * b)
+    ) %>%
+  mutate(Croot = ifelse(Croot > 500, 500, Croot)) %>%
+  select(WS, PW, Croot) %>% 
+  spread(PW, Croot) 
+rownames(Crootlattice) <- Crootlattice$WS 
+Crootlattice <- select(Crootlattice, -WS) 
+asdf <- as.matrix(Crootlattice) 
+
+filled.contour(varWS, varPW, asdf, nlevels = 8, col=brewer.pal(9,"YlOrRd"),
+               xlab="Wing Loading (WS)",ylab="Power Loading (PW)",
+               main = "Root Chord",
+               # plot.title = "Croot",
+               plot.axes = {
+                 axis(1); axis(2);
+                 contour(varWS, varPW, asdf, 
+                         drawlabels = TRUE, add = TRUE);
+                 polygon(x = c(xaxis$WS, 3500, 3500, 0), y = c(xaxis$PW, 30, 0, 0), 
+                         density = 3, col = "grey40");
+                 lines(x = xaxis$WS, y = xaxis$PW, lwd = 2);
+                 points(x = inp$WS, y = inp$Pshaft/inp$W/inp$etamech, pch = 16, cex = 2)
+               })
 
 ## 3D Plots ======================================================================
 varWS <- seq(1500,3500, length.out = 11)
@@ -171,12 +213,17 @@ ProjectedxAxis <- function(inp, WSlower, WSupper, PWupper) {
     PW = xaxis3
   )
   
+  xaxis <- rbind(xaxis1, xaxis2, xaxis3) %>%
+    distinct(.keep_all = TRUE)
+  
   xaxis <- cbind(
-    pseudox = seq(1:nrow(xaxis)),
-    rbind(xaxis1, xaxis2, xaxis3)
+    x = seq(1:nrow(xaxis)),
+    xaxis
     )
   return(xaxis)
 }
+
+xaxis <- ProjectedxAxis(inp, WSlower = 1500, WSupper = 3500, PWupper = 30) 
 
 ProjectedGraphs <- function(xaxis, inp, AR = 20, L_fusein = 12) {
   projectedgraphs <- RepeatRows(inp, xaxis)
@@ -214,19 +261,23 @@ ProjectedGraphs <- function(xaxis, inp, AR = 20, L_fusein = 12) {
 ## Effect of AR ======================================================================
 varAR = seq(15, 82, 1)
 
-projectedgraphs <- ProjectedGraphs(xaxis, inp, AR = varAR)
-projectedgraphs <- mutate(projectedgraphs, AR = factor(AR, levels = varAR, ordered = TRUE))
+projectedgraphsAR <- ProjectedGraphs(xaxis, inp, AR = varAR)
+projectedgraphsAR <- mutate(projectedgraphsAR, AR = factor(AR, levels = varAR, ordered = TRUE))
 
-labels <- select(projectedgraphs, x, WS, PW) %>% distinct(.keep_all = TRUE) %>% arrange(x) %>%
+labels <- select(projectedgraphsAR, x, WS, PW) %>% distinct(.keep_all = TRUE) %>% arrange(x) %>%
   mutate(label = paste(round(WS,1), round(PW,1), sep="\n"))
+labels <- labels[seq(1,nrow(labels), 3), ]
 labels <- rbind(data.frame(x = 0, WS = NA, PW = NA, label = "WS:\nPW:"), labels)
 
-ggplot(projectedgraphs, aes(x = x, y = MTOM, group = AR, colour = AR)) + geom_line() +
+ggplot(projectedgraphsAR, aes(x = x, y = MTOM, group = AR, colour = AR)) + geom_line() +
   scale_x_continuous(breaks = labels$x, labels = labels$label) +
   ylab("Maximum Take-off Mass (MTOM)") +
   xlab("Projected Axis") + 
   coord_cartesian(ylim = c(5500, 9000)) +
-  ggtitle("Effect of Aspect Ratio on MTOM")
+  ggtitle("Effect of Aspect Ratio on MTOM") + 
+  geom_vline(xintercept = 23) + 
+  geom_vline(xintercept = 28) +
+  geom_label(aes(x = 3, y = 5500, label = "2nd Seg OEI"))
 
 
 
